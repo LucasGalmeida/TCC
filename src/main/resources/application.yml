@@ -16,3 +16,10 @@ spring:
       chat:
         options:
           model: llama3.1
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5Dialect
