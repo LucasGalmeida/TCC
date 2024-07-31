@@ -10,15 +10,15 @@ spring:
       base-url: http://localhost:11434
       embedding:
         options:
-          model: llama3.1
+          model: nomic-embed-text
       chat:
         options:
-          model: llama3.1 # ou 3.1
+          model: llama3.1
     vectorstore:
       pgvector:
         index-type: HNSW
         distance-type: COSINE_DISTANCE
-        dimension: 1536
+        dimension: 768 # necessário alterar também tabela no banco postgres
 
   jpa:
     hibernate:

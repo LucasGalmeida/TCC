@@ -18,9 +18,9 @@ public class IAController {
 
     private final IAService iAService;
 
-    @PostMapping("/chat")
+    @PostMapping("/chat-generico")
     public ResponseEntity<ResponseDTO> chat(@RequestBody RequestDTO request) {
-        String chatResponse = iAService.chat(request.query());
+        String chatResponse = iAService.chatGenerico(request.query());
         ResponseDTO response = new ResponseDTO("Success", chatResponse);
         return ResponseEntity.ok(response);
     }
@@ -30,4 +30,12 @@ public class IAController {
         iAService.iniciaLeituraDeDocumentos();
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/chat-especifico")
+    public ResponseEntity<ResponseDTO> chatEspecifico(@RequestBody RequestDTO request) {
+        String chatResponse = iAService.chatEspecifico(request.query());
+        ResponseDTO response = new ResponseDTO("Success", chatResponse);
+        return ResponseEntity.ok(response);
+    }
+
 }

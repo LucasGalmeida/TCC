@@ -13,11 +13,13 @@ import org.springframework.ai.reader.ExtractedTextFormatter;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,13 +34,18 @@ public class IAService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Value("classpath:/docs/PPC - CC - 2024.pdf")
+//    @Value("classpath:/docs/PPC - CC - 2024.pdf")
+//    @Value("classpath:/docs/teste.pdf")
+    @Value("classpath:/docs/Cartão CNPJ.pdf")
     private Resource pdfResource;
 
-    @Value("classpath:/prompts/prompt-padrao.st")
+    @Value("classpath:/prompts/prompt-generico.st")
     private Resource promptOne;
 
-    public String chat(String query) {
+    @Value("classpath:/prompts/prompt-especifico.st")
+    private Resource promptTwo;
+
+    public String chatGenerico(String query) {
         PromptTemplate promptTemplate = new PromptTemplate(promptOne);
         Prompt prompt = promptTemplate.create(Map.of("input", query));
         String response = chatModel.call(prompt).getResult().getOutput().getContent();
@@ -66,6 +73,21 @@ public class IAService {
             vectorStore.accept(documentosProcessados); // salva o embedding no vector store
             log.info("Aplicação esta pronta!");
         }
+    }
+
+    public String chatEspecifico(String query) {
+        PromptTemplate promptTemplate = new PromptTemplate(promptTwo);
+        Map<String, Object> promptParameters = new HashMap<>();
+        promptParameters.put("input", query);
+        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query)));
+
+        String response = chatModel.call(promptTemplate.create(promptParameters)).getResult().getOutput().getContent();
+        return response;
+    }
+
+    private List<String> buscaDocumentosSemelhantes(String message) {
+        List<Document> documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3));
+        return documentosSemelhantes.stream().map(Document::getContent).toList();
     }
 
 }
