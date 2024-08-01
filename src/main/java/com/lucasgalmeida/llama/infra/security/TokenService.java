@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.lucasgalmeida.llama.domain.user.User;
+import com.lucasgalmeida.llama.domain.entities.user.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class TokenService {
             return token;
         } catch (JWTCreationException exception) {
             log.error("Error on token generation for user: {}", user.getLogin(), exception);
-            throw new RuntimeException("Erro ao gerar o token", exception);
+            throw new JWTCreationException("Erro ao gerar o token", exception);
         }
     }
 

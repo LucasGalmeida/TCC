@@ -1,6 +1,9 @@
 package com.lucasgalmeida.llama.services.authservice.impl;
 
-import com.lucasgalmeida.llama.domain.user.User;
+import com.lucasgalmeida.llama.domain.entities.user.User;
+import com.lucasgalmeida.llama.domain.exceptions.auth.InvalidCredentialsException;
+import com.lucasgalmeida.llama.domain.exceptions.auth.UserAlreadyExistsException;
+import com.lucasgalmeida.llama.domain.exceptions.auth.UserNotFoundException;
 import com.lucasgalmeida.llama.dto.auth.AuthResponseDTO;
 import com.lucasgalmeida.llama.dto.auth.LoginRequestDTO;
 import com.lucasgalmeida.llama.dto.auth.RegisterRequestDTO;
@@ -25,27 +28,33 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponseDTO login(LoginRequestDTO body) {
-        User user = repository.findByLogin(body.login()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = repository.findByLogin(body.login()).orElseThrow(UserNotFoundException::new);
         if(passwordEncoder.matches(body.password(), user.getPassword())) {
             String token = tokenService.generateToken(user);
+            log.info("Sucesseful login for user: {}", body.login());
             return new AuthResponseDTO(user.getLogin(), token);
         }
-        throw new RuntimeException("Error");
+        log.error("Wrong password for user: {}", body.login());
+        throw new InvalidCredentialsException();
     }
 
     @Override
     public AuthResponseDTO register(RegisterRequestDTO body) {
+        log.info("Trying register the user: {}", body.login());
         Optional<User> user = repository.findByLogin(body.login());
 
-        if(user.isEmpty()) {
-            User newUser = new User();
-            newUser.setPassword(passwordEncoder.encode(body.password()));
-            newUser.setLogin(body.login());
-            this.repository.save(newUser);
-
-            String token = this.tokenService.generateToken(newUser);
-            return new AuthResponseDTO(newUser.getName(), token);
+        if (user.isPresent()) {
+            throw new UserAlreadyExistsException();
         }
-        throw new RuntimeException("User already registred");
+
+        User newUser = new User();
+        newUser.setPassword(passwordEncoder.encode(body.password()));
+        newUser.setLogin(body.login());
+        repository.save(newUser);
+
+        String token = tokenService.generateToken(newUser);
+        log.info("New user registered: {}", body.login());
+        return new AuthResponseDTO(newUser.getName(), token);
+
     }
 }

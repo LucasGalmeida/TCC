@@ -1,6 +1,6 @@
 package com.lucasgalmeida.llama.repositories;
 
-import com.lucasgalmeida.llama.domain.user.User;
+import com.lucasgalmeida.llama.domain.entities.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
