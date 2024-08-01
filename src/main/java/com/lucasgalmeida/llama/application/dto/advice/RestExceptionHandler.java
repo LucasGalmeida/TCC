@@ -1,4 +1,4 @@
-package com.lucasgalmeida.llama.infra.handler;
+package com.lucasgalmeida.llama.application.dto.advice;
 
 import com.lucasgalmeida.llama.domain.exceptions.auth.InvalidCredentialsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserAlreadyExistsException;

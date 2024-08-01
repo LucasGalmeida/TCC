@@ -1,15 +1,15 @@
-package com.lucasgalmeida.llama.services.authservice.impl;
+package com.lucasgalmeida.llama.domain.services.authservice.impl;
 
 import com.lucasgalmeida.llama.domain.entities.user.User;
 import com.lucasgalmeida.llama.domain.exceptions.auth.InvalidCredentialsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserAlreadyExistsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserNotFoundException;
-import com.lucasgalmeida.llama.dto.auth.AuthResponseDTO;
-import com.lucasgalmeida.llama.dto.auth.LoginRequestDTO;
-import com.lucasgalmeida.llama.dto.auth.RegisterRequestDTO;
+import com.lucasgalmeida.llama.domain.services.authservice.AuthService;
+import com.lucasgalmeida.llama.application.dto.auth.AuthResponseDTO;
+import com.lucasgalmeida.llama.application.dto.auth.LoginRequestDTO;
+import com.lucasgalmeida.llama.application.dto.auth.RegisterRequestDTO;
 import com.lucasgalmeida.llama.infra.security.TokenService;
-import com.lucasgalmeida.llama.repositories.UserRepository;
-import com.lucasgalmeida.llama.services.authservice.AuthService;
+import com.lucasgalmeida.llama.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;

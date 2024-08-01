@@ -1,7 +1,7 @@
 package com.lucasgalmeida.llama.infra.security;
 
 import com.lucasgalmeida.llama.domain.entities.user.User;
-import com.lucasgalmeida.llama.repositories.UserRepository;
+import com.lucasgalmeida.llama.domain.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

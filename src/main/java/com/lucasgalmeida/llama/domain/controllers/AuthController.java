@@ -1,9 +1,9 @@
-package com.lucasgalmeida.llama.controllers;
+package com.lucasgalmeida.llama.domain.controllers;
 
-import com.lucasgalmeida.llama.dto.auth.AuthResponseDTO;
-import com.lucasgalmeida.llama.dto.auth.LoginRequestDTO;
-import com.lucasgalmeida.llama.dto.auth.RegisterRequestDTO;
-import com.lucasgalmeida.llama.services.authservice.impl.AuthServiceImpl;
+import com.lucasgalmeida.llama.application.dto.auth.AuthResponseDTO;
+import com.lucasgalmeida.llama.application.dto.auth.LoginRequestDTO;
+import com.lucasgalmeida.llama.application.dto.auth.RegisterRequestDTO;
+import com.lucasgalmeida.llama.domain.services.authservice.impl.AuthServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

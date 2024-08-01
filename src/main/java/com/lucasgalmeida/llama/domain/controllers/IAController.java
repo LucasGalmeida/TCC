@@ -1,9 +1,9 @@
-package com.lucasgalmeida.llama.controllers;
+package com.lucasgalmeida.llama.domain.controllers;
 
 
-import com.lucasgalmeida.llama.dto.RequestDTO;
-import com.lucasgalmeida.llama.dto.ResponseDTO;
-import com.lucasgalmeida.llama.services.IAService;
+import com.lucasgalmeida.llama.application.dto.RequestDTO;
+import com.lucasgalmeida.llama.application.dto.ResponseDTO;
+import com.lucasgalmeida.llama.domain.services.IAService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

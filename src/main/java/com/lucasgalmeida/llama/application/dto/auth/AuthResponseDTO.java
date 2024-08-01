@@ -1,3 +1,3 @@
-package com.lucasgalmeida.llama.dto.auth;
+package com.lucasgalmeida.llama.application.dto.auth;
 
 public record AuthResponseDTO(String name, String token) {}

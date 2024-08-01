@@ -1,4 +1,4 @@
-package com.lucasgalmeida.llama.repositories;
+package com.lucasgalmeida.llama.domain.repositories;
 
 import com.lucasgalmeida.llama.domain.entities.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;

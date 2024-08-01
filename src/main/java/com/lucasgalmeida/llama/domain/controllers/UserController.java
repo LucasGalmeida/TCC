@@ -1,4 +1,4 @@
-package com.lucasgalmeida.llama.controllers;
+package com.lucasgalmeida.llama.domain.controllers;
 
 
 import org.springframework.http.ResponseEntity;
