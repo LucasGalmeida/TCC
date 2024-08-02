@@ -1,10 +1,10 @@
-package com.lucasgalmeida.llama.domain.services.authservice.impl;
+package com.lucasgalmeida.llama.domain.services.auth.impl;
 
 import com.lucasgalmeida.llama.domain.entities.user.User;
 import com.lucasgalmeida.llama.domain.exceptions.auth.InvalidCredentialsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserAlreadyExistsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserNotFoundException;
-import com.lucasgalmeida.llama.domain.services.authservice.AuthService;
+import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.application.dto.auth.AuthResponseDTO;
 import com.lucasgalmeida.llama.application.dto.auth.LoginRequestDTO;
 import com.lucasgalmeida.llama.application.dto.auth.RegisterRequestDTO;
@@ -48,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User newUser = new User();
+        newUser.setName(body.name());
         newUser.setPassword(passwordEncoder.encode(body.password()));
         newUser.setLogin(body.login());
         repository.save(newUser);

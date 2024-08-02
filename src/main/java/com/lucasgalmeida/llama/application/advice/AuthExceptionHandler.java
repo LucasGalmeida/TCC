@@ -1,4 +1,4 @@
-package com.lucasgalmeida.llama.application.dto.advice;
+package com.lucasgalmeida.llama.application.advice;
 
 import com.lucasgalmeida.llama.domain.exceptions.auth.InvalidCredentialsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserAlreadyExistsException;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @ControllerAdvice
-public class RestExceptionHandler extends ResponseEntityExceptionHandler {
+public class AuthExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
     private ResponseEntity<String> userNotFoundHandler(UserNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());

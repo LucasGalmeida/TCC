@@ -3,7 +3,8 @@ package com.lucasgalmeida.llama.domain.controllers;
 import com.lucasgalmeida.llama.application.dto.auth.AuthResponseDTO;
 import com.lucasgalmeida.llama.application.dto.auth.LoginRequestDTO;
 import com.lucasgalmeida.llama.application.dto.auth.RegisterRequestDTO;
-import com.lucasgalmeida.llama.domain.services.authservice.impl.AuthServiceImpl;
+import com.lucasgalmeida.llama.domain.services.auth.impl.AuthServiceImpl;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,13 +20,13 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO body){
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO body){
         return ResponseEntity.ok(authServiceImpl.login(body));
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO body){
+    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO body){
         return ResponseEntity.ok(authServiceImpl.register(body));
     }
 }

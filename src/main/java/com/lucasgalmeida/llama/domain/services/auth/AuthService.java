@@ -1,4 +1,4 @@
-package com.lucasgalmeida.llama.domain.services.authservice;
+package com.lucasgalmeida.llama.domain.services.auth;
 
 import com.lucasgalmeida.llama.application.dto.auth.AuthResponseDTO;
 import com.lucasgalmeida.llama.application.dto.auth.LoginRequestDTO;
