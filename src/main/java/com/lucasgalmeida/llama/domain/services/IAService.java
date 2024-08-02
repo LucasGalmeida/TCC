@@ -1,4 +1,4 @@
-package com.lucasgalmeida.llama.services;
+package com.lucasgalmeida.llama.domain.services;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
