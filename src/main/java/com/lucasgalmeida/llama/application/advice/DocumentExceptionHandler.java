@@ -1,8 +1,7 @@
 package com.lucasgalmeida.llama.application.advice;
 
-import com.lucasgalmeida.llama.domain.exceptions.auth.UserNotFoundException;
-import com.lucasgalmeida.llama.domain.exceptions.file.FileStorageException;
-import com.lucasgalmeida.llama.domain.exceptions.file.FileTypeException;
+import com.lucasgalmeida.llama.domain.exceptions.document.DocumentStorageException;
+import com.lucasgalmeida.llama.domain.exceptions.document.DocumentTypeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,19 +11,19 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.io.FileNotFoundException;
 
 @ControllerAdvice
-public class FileExceptionHandler extends ResponseEntityExceptionHandler {
+public class DocumentExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(FileNotFoundException.class)
     private ResponseEntity<String> fileNotFoundHandler(FileNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
 
-    @ExceptionHandler(FileStorageException.class)
-    private ResponseEntity<String> fileStorageHandler(FileStorageException exception) {
+    @ExceptionHandler(DocumentStorageException.class)
+    private ResponseEntity<String> fileStorageHandler(DocumentStorageException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 
-    @ExceptionHandler(FileTypeException.class)
-    private ResponseEntity<String> fileTypeHandler(FileTypeException exception) {
+    @ExceptionHandler(DocumentTypeException.class)
+    private ResponseEntity<String> fileTypeHandler(DocumentTypeException exception) {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(exception.getMessage());
     }
 }

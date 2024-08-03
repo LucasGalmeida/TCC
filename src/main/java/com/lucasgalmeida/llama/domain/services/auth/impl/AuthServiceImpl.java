@@ -1,6 +1,6 @@
 package com.lucasgalmeida.llama.domain.services.auth.impl;
 
-import com.lucasgalmeida.llama.domain.entities.user.User;
+import com.lucasgalmeida.llama.domain.entities.User;
 import com.lucasgalmeida.llama.domain.exceptions.auth.InvalidCredentialsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserAlreadyExistsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserNotFoundException;

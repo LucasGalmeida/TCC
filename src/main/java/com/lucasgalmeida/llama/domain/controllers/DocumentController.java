@@ -1,9 +1,7 @@
 package com.lucasgalmeida.llama.domain.controllers;
 
-import com.lucasgalmeida.llama.domain.services.file.FileService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,14 +15,14 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/file")
 @RequiredArgsConstructor
-public class FileController {
+public class DocumentController {
 
-    private final FileService service;
+    private final DocumentService service;
 
     @PostMapping
     public ResponseEntity<String> uploadArquivo(@RequestParam("file") MultipartFile file) {
         try {
-            String fileName = service.saveFile(file);
+            String fileName = service.saveDocument(file);
             return ResponseEntity.ok(fileName);
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("Error on uploading file: " + e.getMessage());
@@ -35,12 +33,12 @@ public class FileController {
     public ResponseEntity<?> downloadArquivo(@PathVariable String name) {
         Resource resource = null;
         try {
-            resource = service.getFile(name);
+            resource = service.getDocument(name);
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("Error when searching for file: " + e.getMessage());
         }
 
-        String type = service.getFileExtension(name);
+        String type = service.getDocumentExtension(name);
         
         if (type.equalsIgnoreCase("pdf")) {
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(resource);
@@ -54,8 +52,8 @@ public class FileController {
 
     @DeleteMapping("/{name}")
     public ResponseEntity<String> removerArquivo(@PathVariable String name) {
-        service.deleteFile(name);
-        return ResponseEntity.ok("File removed successfully!");
+        service.deleteDocument(name);
+        return ResponseEntity.ok("Document removed successfully!");
     }
 
 }

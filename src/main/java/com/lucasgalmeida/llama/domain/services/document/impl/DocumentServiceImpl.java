@@ -1,8 +1,8 @@
-package com.lucasgalmeida.llama.domain.services.file.impl;
+package com.lucasgalmeida.llama.domain.services.document.impl;
 
-import com.lucasgalmeida.llama.domain.exceptions.file.FileStorageException;
-import com.lucasgalmeida.llama.domain.exceptions.file.FileTypeException;
-import com.lucasgalmeida.llama.domain.services.file.FileService;
+import com.lucasgalmeida.llama.domain.exceptions.document.DocumentStorageException;
+import com.lucasgalmeida.llama.domain.exceptions.document.DocumentTypeException;
+import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,13 +24,13 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FileServiceImpl implements FileService {
+public class DocumentServiceImpl implements DocumentService {
 
     @Value("${filePath}")
     private String path;
 
     @Value("${spring.servlet.multipart.max-file-size}")
-    private String maxFileSize;
+    private String maxDocumentSize;
 
     @Value("${spring.servlet.multipart.max-request-size}")
     private String maxRequestSize;
@@ -38,22 +39,22 @@ public class FileServiceImpl implements FileService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     @Override
-    public String saveFile(MultipartFile file) throws IOException {
-        validateFileSize(file.getSize());
-        validateFileType(file.getContentType());
+    public String saveDocument(MultipartFile file) throws IOException {
+        validateDocumentSize(file.getSize());
+        validateDocumentType(file.getContentType());
 
-        String newFileName = generateFileName(file.getOriginalFilename());
-        Path fullPath = Paths.get(path, newFileName);
+        String newDocumentName = generateDocumentName(file.getOriginalFilename());
+        Path fullPath = Paths.get(path, newDocumentName);
         try {
             file.transferTo(fullPath.toFile());
         } catch (IOException e) {
-            throw new FileStorageException("Failed to store file: " + newFileName, e);
+            throw new DocumentStorageException("Failed to store file: " + newDocumentName, e);
         }
-        return newFileName;
+        return newDocumentName;
     }
 
     @Override
-    public Resource getFile(String fileName) throws IOException {
+    public Resource getDocument(String fileName) throws IOException {
         Path fullPath = Paths.get(path, fileName);
         Resource resource = new UrlResource(fullPath.toUri());
 
@@ -65,23 +66,23 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void deleteFile(String fileName) {
+    public void deleteDocument(String fileName) {
         try {
             Path fullPath = Paths.get(path, fileName);
             log.info("Attempting to delete file at path: {}", fullPath.toString());
             boolean isDeleted = Files.deleteIfExists(fullPath);
             if (isDeleted) {
-                log.info("File deleted successfully: {}", fullPath.toString());
+                log.info("Document deleted successfully: {}", fullPath.toString());
             } else {
-                throw new FileNotFoundException("File not found or could not be deleted: %s".formatted(fullPath.toString()));
+                throw new FileNotFoundException("Document not found or could not be deleted: %s".formatted(fullPath.toString()));
             }
         } catch (IOException e) {
-            throw new FileStorageException("Failed to delete the file: " + fileName, e);
+            throw new DocumentStorageException("Failed to delete the file: " + fileName, e);
         }
     }
 
-    private void validateFileSize(long fileSize) {
-        int maxSize = parseSizeStringToInt(maxFileSize);
+    private void validateDocumentSize(long fileSize) {
+        int maxSize = parseSizeStringToInt(maxDocumentSize);
         int maxRequest = parseSizeStringToInt(maxRequestSize);
 
         if (fileSize > maxSize || fileSize > maxRequest) {
@@ -89,9 +90,9 @@ public class FileServiceImpl implements FileService {
         }
     }
 
-    private void validateFileType(String contentType) {
+    private void validateDocumentType(String contentType) {
         if (contentType == null || !isSupportedContentType(contentType)) {
-            throw new FileTypeException("Unsupported file type. Please upload ony PDFs.");
+            throw new DocumentTypeException("Unsupported file type. Please upload ony PDFs.");
         }
     }
 
@@ -104,16 +105,16 @@ public class FileServiceImpl implements FileService {
         return false;
     }
 
-    private String generateFileName(String originalFileName) {
-        String extension = getFileExtension(originalFileName);
-        String baseName = originalFileName.replace(extension, "");
+    private String generateDocumentName(String originalDocumentName) {
+        String extension = getDocumentExtension(originalDocumentName);
+        String baseName = originalDocumentName.replace(extension, "");
         String timestamp = LocalDateTime.now().format(DATE_TIME_FORMATTER);
 
         return baseName + "_" + timestamp + extension;
     }
 
     @Override
-    public String getFileExtension(String fileName) {
+    public String getDocumentExtension(String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return "";
         }

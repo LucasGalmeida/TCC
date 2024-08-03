@@ -1,6 +1,6 @@
 package com.lucasgalmeida.llama.domain.services.user.impl;
 
-import com.lucasgalmeida.llama.domain.entities.user.User;
+import com.lucasgalmeida.llama.domain.entities.User;
 import com.lucasgalmeida.llama.domain.repositories.UserRepository;
 import com.lucasgalmeida.llama.domain.services.user.UserService;
 import lombok.RequiredArgsConstructor;

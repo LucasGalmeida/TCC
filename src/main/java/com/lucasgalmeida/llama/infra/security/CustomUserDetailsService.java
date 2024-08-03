@@ -1,6 +1,6 @@
 package com.lucasgalmeida.llama.infra.security;
 
-import com.lucasgalmeida.llama.domain.entities.user.User;
+import com.lucasgalmeida.llama.domain.entities.User;
 import com.lucasgalmeida.llama.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
