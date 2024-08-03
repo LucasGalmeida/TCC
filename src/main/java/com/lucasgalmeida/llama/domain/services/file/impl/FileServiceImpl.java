@@ -68,7 +68,13 @@ public class FileServiceImpl implements FileService {
     public void deleteFile(String fileName) {
         try {
             Path fullPath = Paths.get(path, fileName);
-            Files.deleteIfExists(fullPath);
+            log.info("Attempting to delete file at path: {}", fullPath.toString());
+            boolean isDeleted = Files.deleteIfExists(fullPath);
+            if (isDeleted) {
+                log.info("File deleted successfully: {}", fullPath.toString());
+            } else {
+                throw new FileNotFoundException("File not found or could not be deleted: %s".formatted(fullPath.toString()));
+            }
         } catch (IOException e) {
             throw new FileStorageException("Failed to delete the file: " + fileName, e);
         }
