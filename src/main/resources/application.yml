@@ -1,10 +1,12 @@
 spring:
   application:
     name: spring-ai-llama
+
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
     password: postgres
+
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -22,5 +24,32 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+      dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    baseline-on-migrate: true
+    fail-on-missing-locations: true
+    sql-migration-prefix: V
+    validate-on-migrate: true
+    baseline-version: 0
+    repair: true
+    locations: classpath:db.migration
+    enable: true
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+filePath: e://Ollama
+
+api:
+  security:
+    token:
+      secret: my-secret-key
+      expiration-hours: 2
