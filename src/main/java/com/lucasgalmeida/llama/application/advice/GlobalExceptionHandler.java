@@ -12,10 +12,13 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.WebRequest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -39,6 +42,32 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleIOException(IOException ex) {
         System.err.println("IOException occurred: " + ex.getMessage());
         return new ResponseEntity<>("An error occurred while processing the input/output operation.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public ResponseEntity<Map<String, String>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex, WebRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", "Method Not Allowed");
+        errors.put("message", ex.getMessage());
+        errors.put("supportedMethods", String.join(", ", ex.getSupportedHttpMethods().toString()));
+        return new ResponseEntity<>(errors, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleValidationExceptions(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Map<String, String>> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", "Bad Request");
+        errors.put("parameter", ex.getParameterName());
+        errors.put("message", "O parâmetro '" + ex.getParameterName() + "' é obrigatório e não foi preenchido.");
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
     // AUTH

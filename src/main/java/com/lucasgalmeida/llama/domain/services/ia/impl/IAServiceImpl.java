@@ -1,6 +1,7 @@
 package com.lucasgalmeida.llama.domain.services.ia.impl;
 
 import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
+import com.lucasgalmeida.llama.domain.repositories.VectorStoreRepository;
 import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import com.lucasgalmeida.llama.domain.services.ia.IAService;
 import jakarta.persistence.EntityManager;
@@ -25,10 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.rmi.RemoteException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +36,7 @@ public class IAServiceImpl implements IAService {
     private final DocumentService documentService;
     private static final Logger log = LoggerFactory.getLogger(IAServiceImpl.class);
     private final VectorStore vectorStore;
+    private final VectorStoreRepository vectorStoreRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -96,7 +95,13 @@ public class IAServiceImpl implements IAService {
 
         vectorStore.accept(documentosProcessados);
         document.setProcessed(true);
+        document.setVectorStores(findByFileName(document.getFileNameWithTimeStamp()));
         documentRepository.save(document);
+    }
+
+    @Override
+    public Set<com.lucasgalmeida.llama.domain.entities.VectorStore> findByFileName(String fileName) {
+        return vectorStoreRepository.findByFileName(fileName);
     }
 
 }

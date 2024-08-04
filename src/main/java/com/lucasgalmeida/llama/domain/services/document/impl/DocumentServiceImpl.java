@@ -167,12 +167,12 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = new Document();
         document.setName(file.getOriginalFilename());
         document.setType(file.getContentType());
-        LocalDateTime dataUpload = LocalDateTime.now();
-        document.setDateUpload(dataUpload);
+        LocalDateTime dateUpload = LocalDateTime.now();
+        document.setDateUpload(dateUpload);
         document.setUser(authService.findAuthenticatedUser());
         document = repository.save(document);
         try {
-            saveDocument(file, document.getUser().getId(), dataUpload.format(DATE_TIME_FORMATTER));
+            saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER));
         } catch (IOException e){
             throw new DocumentStorageException("Failed to store file: " + file.getOriginalFilename(), e);
         }

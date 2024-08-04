@@ -37,4 +37,9 @@ public class IAController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/file-name")
+    public ResponseEntity<?> findByFileName(@RequestParam String fileName) {
+        return ResponseEntity.ok(iAService.findByFileName(fileName));
+    }
+
 }
