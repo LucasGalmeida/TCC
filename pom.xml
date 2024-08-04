@@ -104,6 +104,12 @@
 			<artifactId>java-jwt</artifactId>
 			<version>4.4.0</version>
 		</dependency>
+		<!-- Para usar o jpa no vector store -->
+		<dependency>
+			<groupId>io.hypersistence</groupId>
+			<artifactId>hypersistence-utils-hibernate-63</artifactId>
+			<version>3.8.2</version>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

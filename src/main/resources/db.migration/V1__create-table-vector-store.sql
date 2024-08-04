@@ -9,4 +9,4 @@ CREATE TABLE IF NOT EXISTS vector_store (
 	embedding vector(768)
 );
 
-CREATE INDEX IF NOT EXISTS ON vector_store USING HNSW (embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS vector_store_embedding_idx ON vector_store USING HNSW (embedding vector_cosine_ops);
