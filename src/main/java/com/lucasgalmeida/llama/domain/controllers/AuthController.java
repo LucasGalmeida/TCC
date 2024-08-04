@@ -3,14 +3,12 @@ package com.lucasgalmeida.llama.domain.controllers;
 import com.lucasgalmeida.llama.application.dto.auth.AuthResponseDTO;
 import com.lucasgalmeida.llama.application.dto.auth.LoginRequestDTO;
 import com.lucasgalmeida.llama.application.dto.auth.RegisterRequestDTO;
+import com.lucasgalmeida.llama.domain.entities.User;
 import com.lucasgalmeida.llama.domain.services.auth.impl.AuthServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -28,5 +26,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO body){
         return ResponseEntity.ok(authServiceImpl.register(body));
+    }
+
+    @GetMapping("/authenticated")
+    public ResponseEntity<User> getAuthenticatedUser(){
+        return ResponseEntity.ok(authServiceImpl.findAuthenticatedUser());
     }
 }

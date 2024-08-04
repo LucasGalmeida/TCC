@@ -1,4 +1,4 @@
-package com.lucasgalmeida.llama.domain.entities.user;
+package com.lucasgalmeida.llama.domain.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
