@@ -1,5 +1,8 @@
-package com.lucasgalmeida.llama.domain.services;
+package com.lucasgalmeida.llama.domain.services.ia.impl;
 
+import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
+import com.lucasgalmeida.llama.domain.services.document.DocumentService;
+import com.lucasgalmeida.llama.domain.services.ia.IAService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -18,33 +21,34 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class IAService {
+public class IAServiceImpl implements IAService {
 
     private final OllamaChatModel chatModel;
-    private static final Logger log = LoggerFactory.getLogger(IAService.class);
+    private final DocumentService documentService;
+    private static final Logger log = LoggerFactory.getLogger(IAServiceImpl.class);
     private final VectorStore vectorStore;
 
     @PersistenceContext
     private EntityManager entityManager;
-
-//    @Value("classpath:/docs/PPC - CC - 2024.pdf")
-//    @Value("classpath:/docs/teste.pdf")
-    @Value("classpath:/docs/Cartão CNPJ.pdf")
-    private Resource pdfResource;
-
     @Value("classpath:/prompts/prompt-generico.st")
     private Resource promptOne;
 
     @Value("classpath:/prompts/prompt-especifico.st")
     private Resource promptTwo;
+    private final DocumentRepository documentRepository;
 
+    @Override
     public String chatGenerico(String query) {
         PromptTemplate promptTemplate = new PromptTemplate(promptOne);
         Prompt prompt = promptTemplate.create(Map.of("input", query));
@@ -52,29 +56,7 @@ public class IAService {
         return response;
     }
 
-
-    public void iniciaLeituraDeDocumentos() {
-        Long count = (Long) entityManager.createNativeQuery("select count(*) from vector_store").getSingleResult();
-
-        log.info("Contagem atual do vectorStore: {}", count);
-        if (count == 0) {
-            log.info("Carregando documentação do PDF no Vector Store");
-            var config = PdfDocumentReaderConfig.builder()
-                    .withPageExtractedTextFormatter(new ExtractedTextFormatter.Builder().withNumberOfBottomTextLinesToDelete(0)
-                            .withNumberOfTopPagesToSkipBeforeDelete(0)
-                            .build())
-                    .withPagesPerDocument(1)
-                    .build();
-
-            var pdfReader = new PagePdfDocumentReader(pdfResource, config);
-            var textSplitter = new TokenTextSplitter();
-            List<Document> documents = pdfReader.get(); // Le o pdf
-            List<Document> documentosProcessados = textSplitter.apply(documents); //Divide em chunks
-            vectorStore.accept(documentosProcessados); // salva o embedding no vector store
-            log.info("Aplicação esta pronta!");
-        }
-    }
-
+    @Override
     public String chatEspecifico(String query) {
         PromptTemplate promptTemplate = new PromptTemplate(promptTwo);
         Map<String, Object> promptParameters = new HashMap<>();
@@ -86,8 +68,35 @@ public class IAService {
     }
 
     private List<String> buscaDocumentosSemelhantes(String message) {
+        // todo - aqui busca na tabela inteira. Mas e se eu quiser buscar apenas as do usuário X?
         List<Document> documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3));
         return documentosSemelhantes.stream().map(Document::getContent).toList();
+    }
+
+    @Transactional
+    @Override
+    public void processDocumentById(Integer documentId) throws IOException {
+        com.lucasgalmeida.llama.domain.entities.Document document = documentService.getDocumentById(documentId);
+        if(document.isProcessed()) throw new RuntimeException("Document already processed");
+        Path fullPath = documentService.getFullPath(document);
+        Resource documentFile = documentService.getDocument(fullPath);
+        if(!documentFile.exists()) throw new RuntimeException("Document not found");
+
+        var config = PdfDocumentReaderConfig.builder()
+                .withPageExtractedTextFormatter(new ExtractedTextFormatter.Builder().withNumberOfBottomTextLinesToDelete(0)
+                        .withNumberOfTopPagesToSkipBeforeDelete(0)
+                        .build())
+                .withPagesPerDocument(1)
+                .build();
+        var pdfReader = new PagePdfDocumentReader(documentFile, config);
+        var textSplitter = new TokenTextSplitter();
+
+        List<Document> documents = pdfReader.get(); // Le o pdf
+        List<Document> documentosProcessados = textSplitter.apply(documents); //Divide em chunks
+
+        vectorStore.accept(documentosProcessados);
+        document.setProcessed(true);
+        documentRepository.save(document);
     }
 
 }

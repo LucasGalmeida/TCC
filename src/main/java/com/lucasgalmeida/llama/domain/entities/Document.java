@@ -22,7 +22,7 @@ public class Document {
     private String type;
     @Column(name = "date_upload")
     private LocalDateTime dateUpload;
-
+    private boolean processed;
     @ManyToOne
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_docs_remetentes_pagador_frete_id"))
     private User user;

@@ -69,24 +69,25 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Resource getDocument(String fileName) throws IOException {
-        Path fullPath = Paths.get(path, fileName);
+    public Resource getDocument(Path fullPath) throws IOException {
         Resource resource = new UrlResource(fullPath.toUri());
-
         if (resource.exists() && resource.isReadable()) {
             return resource;
         } else {
-            throw new FileNotFoundException("Unable to read the file: " + fileName);
+            throw new FileNotFoundException("Unable to read the file");
         }
     }
 
-    public void deleteDocument(String fileName, Integer userId, String dateUpload) {
-        try {
-            String fileNameWithoutExtension = removeExtension(fileName);
-            String extension = getExtension(fileName);
-            Path fullPath = Paths.get(path, userId.toString(), fileNameWithoutExtension + "_" + dateUpload + "." + extension);
-            log.info("Attempting to delete file at path: {}", fullPath);
+    @Override
+    public Path getFullPath(Document document){
+        String fileNameWithoutExtension = removeExtension(document.getName());
+        String extension = getExtension(document.getName());
+        return Paths.get(path, document.getUser().getId().toString(), fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + "." + extension);
+    }
 
+    public void deleteDocument(Path fullPath) {
+        try {
+            log.info("Attempting to delete file at path: {}", fullPath);
             boolean isDeleted = Files.deleteIfExists(fullPath);
             if (isDeleted) {
                 log.info("Document deleted successfully: {}", fullPath);
@@ -94,9 +95,9 @@ public class DocumentServiceImpl implements DocumentService {
                 throw new FileNotFoundException();
             }
         } catch (FileNotFoundException e) {
-            throw new DocumentStorageException("Document not found or could not be deleted: %s".formatted(fileName));
+            throw new DocumentStorageException("Document not found or could not be deleted");
         } catch (IOException e) {
-            throw new DocumentStorageException("Failed to delete the file: " + fileName, e);
+            throw new DocumentStorageException("Failed to delete the file", e);
         }
     }
 
@@ -190,7 +191,8 @@ public class DocumentServiceImpl implements DocumentService {
     public void deleteDocumentById(Integer id) {
         Document document = getDocumentById(id);
         repository.deleteById(id);
-        deleteDocument(document.getName(), document.getUser().getId(), document.getDateUpload().format(DATE_TIME_FORMATTER));
+        Path fullPath = getFullPath(document);
+        deleteDocument(fullPath);
     }
 
     private int parseSizeStringToInt(String sizeString) {

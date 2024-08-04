@@ -3,20 +3,19 @@ package com.lucasgalmeida.llama.domain.controllers;
 
 import com.lucasgalmeida.llama.application.dto.RequestDTO;
 import com.lucasgalmeida.llama.application.dto.ResponseDTO;
-import com.lucasgalmeida.llama.domain.services.IAService;
+import com.lucasgalmeida.llama.domain.services.ia.impl.IAServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/ia")
 public class IAController {
 
-    private final IAService iAService;
+    private final IAServiceImpl iAService;
 
     @PostMapping("/chat-generico")
     public ResponseEntity<ResponseDTO> chat(@RequestBody RequestDTO request) {
@@ -25,9 +24,9 @@ public class IAController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/iniciar")
-    public ResponseEntity<?> iniciarLeituraDeDocumentos() {
-        iAService.iniciaLeituraDeDocumentos();
+    @PostMapping("/process/{id}")
+    public ResponseEntity<?> processDocumentById(@PathVariable Integer id) throws IOException {
+        iAService.processDocumentById(id);
         return ResponseEntity.ok().build();
     }
 
