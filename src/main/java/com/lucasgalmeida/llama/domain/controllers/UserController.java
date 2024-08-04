@@ -2,6 +2,7 @@ package com.lucasgalmeida.llama.domain.controllers;
 
 
 import com.lucasgalmeida.llama.domain.entities.User;
+import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.domain.services.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

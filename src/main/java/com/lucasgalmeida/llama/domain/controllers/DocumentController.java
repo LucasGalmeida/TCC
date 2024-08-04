@@ -1,5 +1,6 @@
 package com.lucasgalmeida.llama.domain.controllers;
 
+import com.lucasgalmeida.llama.domain.entities.Document;
 import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -13,24 +14,14 @@ import java.io.IOException;
 
 
 @RestController
-@RequestMapping("/file")
+@RequestMapping("/document")
 @RequiredArgsConstructor
 public class DocumentController {
 
     private final DocumentService service;
 
-    @PostMapping
-    public ResponseEntity<String> uploadArquivo(@RequestParam("file") MultipartFile file) {
-        try {
-            String fileName = service.saveDocument(file);
-            return ResponseEntity.ok(fileName);
-        } catch (IOException e) {
-            return ResponseEntity.badRequest().body("Error on uploading file: " + e.getMessage());
-        }
-    }
-
-    @GetMapping(("/{name}"))
-    public ResponseEntity<?> downloadArquivo(@PathVariable String name) {
+    @GetMapping(("/{name}")) // todo - id
+    public ResponseEntity<?> downalodFile(@PathVariable String name) {
         Resource resource = null;
         try {
             resource = service.getDocument(name);
@@ -50,11 +41,20 @@ public class DocumentController {
                 .body(resource);
     }
 
-    @DeleteMapping("/{name}")
-    public ResponseEntity<String> removerArquivo(@PathVariable String name) {
-        service.deleteDocument(name);
+    @PostMapping
+    public ResponseEntity<Document> saveDocumentByUser(@RequestParam("file") MultipartFile file) throws IOException {
+        return ResponseEntity.ok(service.saveDocumentByUser(file));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteDocumentById(@PathVariable Integer id) {
+        service.deleteDocumentById(id);
         return ResponseEntity.ok("Document removed successfully!");
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Document> getDocumentById(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.getDocumentById(id));
+    }
 }
 
