@@ -16,7 +16,8 @@ const RegistrationForm: React.FC = () => {
 
   const onFinish = (values: RegistrationFormValues) => {
     console.log('Received values from form: ', values);
-    // Add your logic to submit the form data to the backend here
+    // Add your logic to submit the form data to the backend here 
+    // navigate('/');
   };
 
   return (
