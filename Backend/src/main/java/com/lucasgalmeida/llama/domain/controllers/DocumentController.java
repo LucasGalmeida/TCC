@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.List;
 
 
@@ -25,6 +26,11 @@ public class DocumentController {
     @PostMapping
     public ResponseEntity<Document> saveDocumentByUser(@RequestParam("file") MultipartFile file) throws IOException {
         return ResponseEntity.ok(service.saveDocumentByUser(file));
+    }
+
+    @PostMapping("/documents")
+    public ResponseEntity<List<Document>> saveDocumentsByUser(@RequestParam("files") MultipartFile[] files) throws IOException {
+        return ResponseEntity.ok(service.saveDocumentsByUser(files));
     }
 
     @DeleteMapping("/{id}")

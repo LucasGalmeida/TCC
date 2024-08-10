@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Button, theme, Modal } from 'antd';
-import { PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Layout, Menu, Button, theme, Modal, Upload, message } from 'antd';
+import { UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
 import { useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
@@ -32,11 +32,49 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   }
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const showModal = () => setIsModalVisible(true);
-  const handleOk = () => {
+  const [arquivosASeremSalvos, setArquivosASeremSalvos] = useState<any[]>([]);
+  const [modalTitle, setModalTitle] = useState("Titulo");
+  const showModal = (tipo:number) => {
+    if(tipo == 1){
+      setModalTitle("Adicionar Documento")
+    } else if(tipo == 2){
+      setModalTitle("Iniciar novo chat")
+    }
+    setIsModalVisible(true)
+  } 
+  const handleOk = (tipo:number) => {
+    if(tipo == 1){
+      if (arquivosASeremSalvos.length === 0) {
+        message.error('Nenhum arquivo selecionado!');
+        return;
+      }
+      const formData = new FormData();
+      arquivosASeremSalvos.forEach(file => {
+        formData.append('files', file);
+      });
+      DocumentService.saveDocuments(formData)
+      .then(response => {
+        setDocuments([...documents, ...response]);
+        setArquivosASeremSalvos([]);
+      })
+      .catch(error => {
+        console.error("Erro ao salvar documentos: ", error.response.data);
+      });
+    }
     setIsModalVisible(false);
   };
-  const handleCancel = () => setIsModalVisible(false);
+  const handleCancel = () => {
+    setArquivosASeremSalvos([]);
+    setIsModalVisible(false)
+  };
+
+  const beforeUpload = (file: any) => {
+    const isPDF = file.type === 'application/pdf';
+    if (!isPDF) {
+      message.error('Você pode apenas fazer upload de arquivos PDF!');
+    }
+    return isPDF;
+  };
 
   type MenuItem = Required<MenuProps>['items'][number];
   const menuItems: MenuItem[] = [
@@ -50,7 +88,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
             <Button 
               type="text" 
               icon={<PlusOutlined />} 
-              onClick={showModal} 
+              onClick={() => showModal(1)} 
               style={{ color: "white", width: "100%", textAlign: "left" }}
             >
               Adicionar Documento
@@ -76,7 +114,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
             <Button 
               type="text" 
               icon={<PlusOutlined />} 
-              onClick={showModal} 
+              onClick={() => showModal(2)} 
               style={{ color: "white", width: "100%", textAlign: "left" }}
             >
               Novo chat
@@ -136,8 +174,23 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       </Layout>
 
 
-      <Modal title="Adicionar Documento" open={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-        {/* Conteúdo do modal para adicionar documentos */}
+      <Modal title={modalTitle} open={isModalVisible} onOk={() => handleOk(1)} onCancel={handleCancel}>
+        <Upload
+          name="file"
+          customRequest={({ file, onSuccess, onError }) => {
+            setArquivosASeremSalvos([file]);
+          }}
+          beforeUpload={beforeUpload}
+          fileList={arquivosASeremSalvos}
+          showUploadList={{
+            showPreviewIcon: true,
+            showRemoveIcon: true,
+            showDownloadIcon: false
+          }}
+          accept=".pdf"
+        >
+          <Button icon={<UploadOutlined />}>Clique para anexar o PDF</Button>
+        </Upload>
       </Modal>
 
     </Layout>

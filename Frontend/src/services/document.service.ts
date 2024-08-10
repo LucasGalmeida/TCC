@@ -32,6 +32,20 @@ class DocumentService {
             throw error;
         }
     }
+
+    static async saveDocuments(files:FormData) {
+        try {
+            const response = await backend.post(route + `/documents`, files, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              })
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
 }
 
 export default DocumentService;

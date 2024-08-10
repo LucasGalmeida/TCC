@@ -24,6 +24,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -119,4 +120,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(FileAlreadyExistsException.class)
+    public ResponseEntity<String> handleDocumentAlreadyExistsException(FileAlreadyExistsException ex) {
+        return new ResponseEntity<>("O documento " + ex.getMessage() + " já foi inserido.", HttpStatus.CONFLICT);
+    }
 }

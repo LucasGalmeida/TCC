@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -177,8 +178,11 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public Document saveDocumentByUser(MultipartFile file) {
+    public Document saveDocumentByUser(MultipartFile file) throws FileAlreadyExistsException {
         Document document = new Document();
+        if(repository.existsByName(file.getOriginalFilename())){
+            throw new FileAlreadyExistsException(file.getOriginalFilename());
+        }
         document.setName(file.getOriginalFilename());
         document.setType(file.getContentType());
         LocalDateTime dateUpload = LocalDateTime.now();
@@ -191,6 +195,16 @@ public class DocumentServiceImpl implements DocumentService {
             throw new DocumentStorageException("Failed to store file: " + file.getOriginalFilename(), e);
         }
         return document;
+    }
+
+    @Override
+    @Transactional
+    public List<Document> saveDocumentsByUser(MultipartFile[] files) throws FileAlreadyExistsException {
+        List<Document> retorno = new ArrayList<>();
+        for(MultipartFile file: files){
+            retorno.add(saveDocumentByUser(file));
+        }
+        return retorno;
     }
 
     @Override

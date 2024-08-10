@@ -8,4 +8,7 @@ import java.util.List;
 public interface DocumentRepository extends JpaRepository<Document, Integer> {
     List<Document> findByUser_Id(Integer id);
 
+    boolean existsByName(String name);
+
+
 }
