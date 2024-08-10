@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Form, Input, Button, Checkbox, FormProps } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
 };
 
 const Login: React.FC = () => {
-  const { login } = useAuthContext();
+  const { login, isAuthenticated } = useAuthContext();
 
   const onFinish = (values: any) => {
     const data = {
@@ -29,14 +29,19 @@ const Login: React.FC = () => {
     }
     AuthService.login(data)
     .then(response => {
-      window.localStorage.setItem("token", response.token);
       login();
+      window.localStorage.setItem("token", response.token);
       navigate('/chat');
     })
     .catch(error => {
       console.error("Erro ao fazer login:", error.response.data);
   });
   };
+
+  useEffect(() => {
+    if(isAuthenticated) navigate('/chat');
+  }, []);
+
 
   const navigate = useNavigate();
 

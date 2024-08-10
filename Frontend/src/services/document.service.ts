@@ -8,7 +8,7 @@ class DocumentService {
             const response = await backend.get(route + "/my-documents");
             return response.data;
         } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
         }
     }
@@ -18,7 +18,17 @@ class DocumentService {
             const response = await backend.get(route + `/${id}`);
             return response.data;
         } catch (error) {
-            console.log(error);
+            console.error(error);
+            throw error;
+        }
+    }
+
+    static async getResourceById(id:string) {
+        try {
+            const response = await backend.get(route + `/resource/${id}`, { responseType: 'blob' })
+            return response.data;
+        } catch (error) {
+            console.error(error);
             throw error;
         }
     }

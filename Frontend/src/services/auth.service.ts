@@ -8,7 +8,7 @@ class AuthService {
             const response = await backend.post(route + "/login", request);
             return response.data;
         } catch (error) {
-            console.log(error);
+            console.error(error);
             throw error;
         }
     }

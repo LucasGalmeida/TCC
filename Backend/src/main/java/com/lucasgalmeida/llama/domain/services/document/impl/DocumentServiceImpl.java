@@ -11,6 +11,8 @@ import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -51,7 +53,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final AuthService authService;
     private final DocumentRepository repository;
 
-    private String saveDocument(MultipartFile file, Integer userId, String dateUpload, Document document) throws IOException {
+    private String saveDocument(MultipartFile file, Integer userId, String dateUpload) throws IOException {
         validateDocumentSize(file.getSize());
         validateDocumentType(file.getContentType());
 
@@ -63,8 +65,6 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         Path fullPath = directoryPath.resolve(newDocumentName);
-        document.setUrl(fullPath.toString());
-        repository.save(document);
         try {
             file.transferTo(fullPath.toFile());
         } catch (IOException e) {
@@ -186,7 +186,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setUser(authService.findAuthenticatedUser());
         document = repository.save(document);
         try {
-            saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER), document);
+            saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER));
         } catch (IOException e){
             throw new DocumentStorageException("Failed to store file: " + file.getOriginalFilename(), e);
         }
@@ -198,6 +198,13 @@ public class DocumentServiceImpl implements DocumentService {
         return repository.findById(id).orElseThrow(() ->
                 new DocumentNotFoundException("Document not found")
         );
+    }
+
+    @Override
+    public Resource getResourceById(Integer id){
+        Document document = getDocumentById(id);
+        Path fullPath = getFullPath(document);
+        return new FileSystemResource(fullPath.toString());
     }
 
     @Override

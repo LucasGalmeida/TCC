@@ -7,7 +7,7 @@ import { useParams } from 'react-router-dom';
 const DocumentView: React.FC = () => {
 
   const { documentId } = useParams<{ documentId: string }>();
-  const [document, setDocument] = useState<any>(null);
+  const [pdfUrl, setPdfUrl] = useState<any>(null);
 
   useEffect(() => {
     if(documentId){
@@ -16,9 +16,11 @@ const DocumentView: React.FC = () => {
   }, [])
 
   function buscarDocumentoPorId(){
-    DocumentService.getDocumentById(documentId!)
+    DocumentService.getResourceById(documentId!)
     .then(response => {
-      setDocument(response);
+      const blob = new Blob([response], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
     })
     .catch(error => {
       console.error("Erro ao buscar documento por id: ", error.response.data);
@@ -26,11 +28,12 @@ const DocumentView: React.FC = () => {
   }
 
   return (
-    document 
+    pdfUrl 
     ?
     <div>
       <h1>PDF Preview</h1>
-      <PdfPreview pdfUrl={document.url} />
+      <PdfPreview pdfUrl={pdfUrl} />
+      {/* <img src={pdfUrl} /> */}
     </div>
     :
     <>

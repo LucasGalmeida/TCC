@@ -5,6 +5,7 @@ import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,19 @@ public class DocumentController {
     @GetMapping("/{id}")
     public ResponseEntity<Document> getDocumentById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.getDocumentById(id));
+    }
+
+    @GetMapping("/resource/{id}")
+    public ResponseEntity<Resource> getResourceById(@PathVariable Integer id) throws IOException {
+        Resource resource = service.getResourceById(id);
+        if (resource.exists()) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_TYPE, "application/pdf");
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + resource.getFilename());
+            return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/my-documents")

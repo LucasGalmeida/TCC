@@ -17,6 +17,7 @@ public interface DocumentService {
     Document saveDocumentByUser(MultipartFile file);
 
     Document getDocumentById(Integer id);
+    Resource getResourceById(Integer id);
 
     void deleteDocumentById(Integer id);
 
