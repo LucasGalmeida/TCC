@@ -3,6 +3,7 @@ package com.lucasgalmeida.llama.application.advice;
 import com.lucasgalmeida.llama.domain.exceptions.auth.InvalidCredentialsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserAlreadyExistsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserNotFoundException;
+import com.lucasgalmeida.llama.domain.exceptions.chat.ChatNotFoundException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentNotFoundException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentStorageException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentTypeException;
@@ -123,5 +124,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FileAlreadyExistsException.class)
     public ResponseEntity<String> handleDocumentAlreadyExistsException(FileAlreadyExistsException ex) {
         return new ResponseEntity<>("O documento " + ex.getMessage() + " já foi inserido.", HttpStatus.CONFLICT);
+    }
+
+
+    // Chat
+    @ExceptionHandler(ChatNotFoundException.class)
+    public ResponseEntity<String> handleChatNotFoundException(ChatNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 }

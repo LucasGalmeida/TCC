@@ -1,12 +1,21 @@
-package com.lucasgalmeida.llama.domain.services.ia.impl;
+package com.lucasgalmeida.llama.domain.services.chat.impl;
 
+import com.lucasgalmeida.llama.application.constants.ChatHistoryEnum;
+import com.lucasgalmeida.llama.domain.entities.Chat;
+import com.lucasgalmeida.llama.domain.entities.ChatHistory;
+import com.lucasgalmeida.llama.domain.entities.User;
+import com.lucasgalmeida.llama.domain.exceptions.chat.ChatNotFoundException;
+import com.lucasgalmeida.llama.domain.repositories.ChatHistoryRepository;
+import com.lucasgalmeida.llama.domain.repositories.ChatRepository;
 import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
 import com.lucasgalmeida.llama.domain.repositories.VectorStoreRepository;
+import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.domain.services.document.DocumentService;
-import com.lucasgalmeida.llama.domain.services.ia.IAService;
+import com.lucasgalmeida.llama.domain.services.chat.ChatService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -28,28 +37,37 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class IAServiceImpl implements IAService {
+public class ChatServiceImpl implements ChatService {
 
     private final OllamaChatModel chatModel;
     private final DocumentService documentService;
-    private static final Logger log = LoggerFactory.getLogger(IAServiceImpl.class);
+    private final AuthService authService;
     private final VectorStore vectorStore;
     private final VectorStoreRepository vectorStoreRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    // todo - prompts dinamicos?
     @Value("classpath:/prompts/prompt-generico.st")
-    private Resource promptOne;
+    private Resource promptGenerico;
 
     @Value("classpath:/prompts/prompt-especifico.st")
-    private Resource promptTwo;
+    private Resource promptEspecifico;
+
+    @Value("classpath:/prompts/prompt-embedding.st")
+    private Resource promptEmbedding;
+
     private final DocumentRepository documentRepository;
+    private final ChatRepository chatRepository;
+    private final ChatHistoryRepository chatHistoryRepository;
 
     @Override
     public String chatGenerico(String query) {
-        PromptTemplate promptTemplate = new PromptTemplate(promptOne);
+        PromptTemplate promptTemplate = new PromptTemplate(promptGenerico);
         Prompt prompt = promptTemplate.create(Map.of("input", query));
         String response = chatModel.call(prompt).getResult().getOutput().getContent();
         return response;
@@ -57,13 +75,26 @@ public class IAServiceImpl implements IAService {
 
     @Override
     public String chatEspecifico(String query) {
-        PromptTemplate promptTemplate = new PromptTemplate(promptTwo);
+        PromptTemplate promptTemplate = new PromptTemplate(promptEspecifico);
         Map<String, Object> promptParameters = new HashMap<>();
         promptParameters.put("input", query);
         promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query)));
 
         String response = chatModel.call(promptTemplate.create(promptParameters)).getResult().getOutput().getContent();
         return response;
+    }
+
+    @Override
+    @Transactional
+    public ChatHistory chatEmbedding(String query, Integer chatId) {
+        Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new ChatNotFoundException("Chat not found with id: " + chatId));
+        chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.USER_REQUEST, query, chat));
+        PromptTemplate promptTemplate = new PromptTemplate(promptEmbedding);
+        Map<String, Object> promptParameters = new HashMap<>();
+        promptParameters.put("input", query);
+        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query)));
+        String response = chatModel.call(promptTemplate.create(promptParameters)).getResult().getOutput().getContent();
+        return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
     }
 
     private List<String> buscaDocumentosSemelhantes(String message) {
@@ -102,6 +133,18 @@ public class IAServiceImpl implements IAService {
     @Override
     public Set<com.lucasgalmeida.llama.domain.entities.VectorStore> findByFileName(String fileName) {
         return vectorStoreRepository.findByFileName(fileName);
+    }
+
+    @Override
+    public Chat createNewChat(String title) {
+        User user = authService.findAuthenticatedUser();
+        return chatRepository.save(new Chat(title, user));
+    }
+
+    @Override
+    public List<Chat> findAllChatsByUser() {
+        User user = authService.findAuthenticatedUser();
+        return chatRepository.findByUser_Id(user.getId());
     }
 
 }

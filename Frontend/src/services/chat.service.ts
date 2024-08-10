@@ -1,8 +1,8 @@
 import backend from './server-config';
 
-const route = "/ia";
+const route = "/chat";
 
-class IAService {
+class ChatService {
     static async processDocumentById(id:any) {
         try {
             const response = await backend.post(route + `/process/${id}`, null);
@@ -12,6 +12,16 @@ class IAService {
             throw error;
         }
     }
+
+    static async myChats() {
+        try {
+            const response = await backend.get(route);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
 }
 
-export default IAService;
+export default ChatService;

@@ -5,7 +5,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import DocumentService from '../services/document.service';
-import IAService from '../services/ia.service';
+import ChatService from '../services/chat.service';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -20,6 +20,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   useEffect(() => {
     buscarMeusDocumentos();
+    buscarMeusChats();
   }, [])
 
   function buscarMeusDocumentos(){
@@ -32,29 +33,39 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     });
   }
 
+  function buscarMeusChats(){
+    ChatService.myChats()
+    .then(response => {
+      setChats(response);
+    })
+    .catch(error => {
+      console.error("Erro ao buscar chats: ", error.response.data);
+    });
+  }
+
   function processarDocumento(docId:number){
-    IAService.processDocumentById(docId)
-      .then(response => {
+    ChatService.processDocumentById(docId)
+      .then(_ => {
         message.success('Documento processado com sucesso!');
         const updatedDocuments = documents.map((doc: any) => 
           doc.id === docId ? { ...doc, processed: true } : doc
         );
         setDocuments(updatedDocuments);
       })
-      .catch(error => {
+      .catch(_ => {
         message.error('Erro ao processar o documento.');
       });
   }
 
   const excluirDocumento = (docId: string) => {
     DocumentService.deleteDocumentById(docId)
-      .then(response => {
+      .then(_ => {
         message.success('Documento excluído com sucesso!');
         setDocuments(documents.filter((doc: any) => doc.id !== docId));
         const { documentId } = useParams<{ documentId: string }>();
         if(documentId == docId) navigate("/home");
       })
-      .catch(error => {
+      .catch(_ => {
         message.error('Erro ao excluir o documento.');
       });
   };
@@ -239,7 +250,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       <Modal title={modalTitle} open={isModalVisible} onOk={() => handleOk(1)} onCancel={handleCancel}>
         <Upload
           name="file"
-          customRequest={({ file, onSuccess, onError }) => {
+          customRequest={({ file }) => {
             setArquivosASeremSalvos([file]);
           }}
           beforeUpload={beforeUpload}

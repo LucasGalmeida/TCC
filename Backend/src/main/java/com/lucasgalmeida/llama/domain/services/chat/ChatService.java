@@ -1,0 +1,19 @@
+package com.lucasgalmeida.llama.domain.services.chat;
+
+import com.lucasgalmeida.llama.domain.entities.Chat;
+import com.lucasgalmeida.llama.domain.entities.ChatHistory;
+import com.lucasgalmeida.llama.domain.entities.VectorStore;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+
+public interface ChatService {
+    String chatGenerico(String query);
+    String chatEspecifico(String query);
+    ChatHistory chatEmbedding(String query, Integer chatId);
+    void processDocumentById(Integer id) throws IOException;
+    Set<VectorStore> findByFileName(String fileName);
+    Chat createNewChat(String title);
+    List<Chat> findAllChatsByUser();
+}
