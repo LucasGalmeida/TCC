@@ -1,6 +1,7 @@
 package com.lucasgalmeida.llama.domain.services.document.impl;
 
 import com.lucasgalmeida.llama.domain.entities.Document;
+import com.lucasgalmeida.llama.domain.entities.User;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentNotFoundException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentStorageException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentTypeException;
@@ -26,6 +27,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -83,6 +87,15 @@ public class DocumentServiceImpl implements DocumentService {
         String fileNameWithoutExtension = removeExtension(document.getName());
         String extension = getExtension(document.getName());
         return Paths.get(path, document.getUser().getId().toString(), fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + "." + extension);
+    }
+
+    @Override
+    public List<Document> getMyDocuments() {
+        User user = authService.findAuthenticatedUser();
+        if(Objects.nonNull(user)){
+            return repository.findByUser_Id(user.getId());
+        }
+        return new ArrayList<>();
     }
 
     public void deleteDocument(Path fullPath) {

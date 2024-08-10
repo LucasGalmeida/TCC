@@ -8,3 +8,14 @@ const backend = axios.create({
 });
 
 export default backend;
+
+
+backend.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token'); // Retrieve the token from localStorage
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`; // Add the token to the Authorization header
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});

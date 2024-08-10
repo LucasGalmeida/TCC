@@ -6,7 +6,7 @@ import AuthService from "../services/auth.service";
 import { useAuthContext } from "../context/AuthContext";
 
 type FieldType = {
-  username?: string;
+  login?: string;
   password?: string;
   remember?: string;
 };
@@ -24,7 +24,7 @@ const Login: React.FC = () => {
 
   const onFinish = (values: any) => {
     const data = {
-      login: values.username,
+      login: values.login,
       password: values.password
     }
     AuthService.login(data)
@@ -60,9 +60,9 @@ const Login: React.FC = () => {
         autoComplete="off"
       >
         <Form.Item<FieldType>
-          label="Username"
-          name="username"
-          rules={[{ required: true, message: "Please input your username!" }]}
+          label="Login"
+          name="login"
+          rules={[{ required: true, message: "Please input your login!" }]}
         >
           <Input />
         </Form.Item>

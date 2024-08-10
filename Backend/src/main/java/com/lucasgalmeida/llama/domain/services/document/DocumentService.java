@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 public interface DocumentService {
     String saveDocument(MultipartFile file, Integer id, String dateUpload) throws IOException;
@@ -21,4 +22,5 @@ public interface DocumentService {
     void deleteDocumentById(Integer id);
 
     Path getFullPath(Document document);
+    List<Document> getMyDocuments();
 }
