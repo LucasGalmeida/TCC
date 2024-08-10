@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm } from 'antd';
-import { CheckOutlined, CloseOutlined, UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
+import { DeleteOutlined, CheckOutlined, CloseOutlined, UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
@@ -35,6 +35,17 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     console.log(id);
     // chama rota de processar por id, ao voltar troca status do doc
   }
+
+  const excluirDocumento = (docId: string) => {
+    DocumentService.deleteDocumentById(docId)
+      .then(response => {
+        message.success('Documento excluído com sucesso!');
+        setDocuments(documents.filter((doc: any) => doc.id !== docId));
+      })
+      .catch(error => {
+        message.error('Erro ao excluir o documento.');
+      });
+  };
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [arquivosASeremSalvos, setArquivosASeremSalvos] = useState<any[]>([]);
@@ -121,6 +132,15 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 </Popconfirm>
               )}
               {doc.name}
+              <Popconfirm
+                title="Excluir documento"
+                description="Tem certeza que você deseja excluir este documento?"
+                onConfirm={() => excluirDocumento(doc.id)} 
+                okText="EXCLUIR"
+                cancelText="CANCELAR"
+              >
+                <Button danger icon={<DeleteOutlined />} style={{ marginLeft: '8px' }}></Button>
+              </Popconfirm>
             </span>
           ),
           key: doc.id,

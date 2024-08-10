@@ -46,6 +46,16 @@ class DocumentService {
             throw error;
         }
     }
+
+    static async deleteDocumentById(id:string) {
+        try {
+            const response = await backend.delete(route + `/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
 }
 
 export default DocumentService;
