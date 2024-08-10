@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Button, theme, Modal, Upload, message } from 'antd';
-import { UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm } from 'antd';
+import { CheckOutlined, CloseOutlined, UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
 import { useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
@@ -31,6 +31,11 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     });
   }
 
+  function processarDocumento(id:number){
+    console.log(id);
+    // chama rota de processar por id, ao voltar troca status do doc
+  }
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [arquivosASeremSalvos, setArquivosASeremSalvos] = useState<any[]>([]);
   const [modalTitle, setModalTitle] = useState("Titulo");
@@ -41,7 +46,8 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       setModalTitle("Iniciar novo chat")
     }
     setIsModalVisible(true)
-  } 
+  }
+
   const handleOk = (tipo:number) => {
     if(tipo == 1){
       if (arquivosASeremSalvos.length === 0) {
@@ -63,6 +69,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     }
     setIsModalVisible(false);
   };
+
   const handleCancel = () => {
     setArquivosASeremSalvos([]);
     setIsModalVisible(false)
@@ -89,17 +96,35 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
               type="text" 
               icon={<PlusOutlined />} 
               onClick={() => showModal(1)} 
-              style={{ color: "white", width: "100%", textAlign: "left" }}
+              style={{ color: "white", width: "100%", textAlign: "left"}}
             >
               Adicionar Documento
             </Button>
           ),
+          style: { paddingLeft: '0px'},
           key: "addDocument",
         },
         ...documents.map((doc:any) => ({
-          label: doc.name,
+          label: (
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              {doc.processed ? (
+                <CheckOutlined style={{ color: 'green', marginRight: 8, marginLeft: 8 }} />
+              ) : (
+                <Popconfirm
+                  title="Processar documento"
+                  description="Tem certeza que você deseja iniciar o processamento desse documento (esse processo pode levar vários minutos)"
+                  onConfirm={() => processarDocumento(doc.id)}
+                  okText="PROCESSAR"
+                  cancelText="CANCELAR"
+                >
+                  <Button danger icon={<CloseOutlined style={{ color: 'red' }} />} style={{padding: '6px', marginRight: '8px', marginLeft: '8px'}}></Button>
+                </Popconfirm>
+              )}
+              {doc.name}
+            </span>
+          ),
           key: doc.id,
-          style: {whiteSpace: 'normal', height: 'auto'},
+          style: {whiteSpace: 'normal', height: 'auto', border: '1px solid white', paddingLeft: '0px'},
           onClick: () => navigate(`/document/${doc.id}`)
         })),
       ],

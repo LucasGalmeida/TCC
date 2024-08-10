@@ -2,10 +2,12 @@ package com.lucasgalmeida.llama.domain.services.document.impl;
 
 import com.lucasgalmeida.llama.domain.entities.Document;
 import com.lucasgalmeida.llama.domain.entities.User;
+import com.lucasgalmeida.llama.domain.entities.VectorStore;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentNotFoundException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentStorageException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentTypeException;
 import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
+import com.lucasgalmeida.llama.domain.repositories.VectorStoreRepository;
 import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +35,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DocumentServiceImpl implements DocumentService {
+    private final VectorStoreRepository vectorStoreRepository;
 
     @Value("${filePath}")
     private String path;
@@ -225,6 +229,11 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional
     public void deleteDocumentById(Integer id) {
         Document document = getDocumentById(id);
+        if(document.isProcessed()){
+            List<UUID> vectorStoreIds = document.getVectorStores().stream().map(VectorStore::getId).toList();
+            vectorStoreRepository.deleteAllById(vectorStoreIds);
+            document.getVectorStores().clear();
+        }
         repository.deleteById(id);
         Path fullPath = getFullPath(document);
         deleteDocument(fullPath);

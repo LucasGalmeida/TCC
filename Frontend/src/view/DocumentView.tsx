@@ -13,7 +13,7 @@ const DocumentView: React.FC = () => {
     if(documentId){
       buscarDocumentoPorId();
     }
-  }, [])
+  }, [documentId])
 
   function buscarDocumentoPorId(){
     DocumentService.getResourceById(documentId!)
