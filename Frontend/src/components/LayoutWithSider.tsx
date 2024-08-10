@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm } from 'antd';
 import { CheckOutlined, CloseOutlined, UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import DocumentService from '../services/document.service';
 
@@ -167,12 +167,17 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       </Sider>
       <Layout>
         <Header style={{ padding: 0, display: 'flex', justifyContent: 'space-between' }}>
+          <div>
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
               style={{ fontSize: '16px', width: 64, height: 64, color: "white" }}
             />
+            <Link to="/home" style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', marginLeft: '16px' }}>
+              Home
+            </Link>
+          </div>
             <Button
               type="text"
               icon={<LogoutOutlined />}
@@ -195,7 +200,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         >
           {children}
         </Content>
-        <Footer style={{ textAlign: 'center' }}>Ant Design ©2024 Created by Ant UED</Footer>
+        <Footer style={{ textAlign: 'center' }}>ChatAI ©2024</Footer>
       </Layout>
 
 

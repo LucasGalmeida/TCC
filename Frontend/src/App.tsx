@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import Login from './view/Login';
@@ -7,8 +6,8 @@ import Register from './view/Register';
 import { AuthContextProvider } from './context/AuthContext';
 import LayoutWithSider from './components/LayoutWithSider';
 import RequireAuth from './components/RequireAuth';
-import ChatView from './view/ChatView';
 import DocumentView from './view/DocumentView';
+import HomeView from './view/HomeView';
 
 function App() {
 
@@ -18,10 +17,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/chat" element={
+          <Route path="/home" element={
             <RequireAuth>
               <LayoutWithSider>
-                <ChatView />
+                <HomeView />
               </LayoutWithSider>
             </RequireAuth>
           } />

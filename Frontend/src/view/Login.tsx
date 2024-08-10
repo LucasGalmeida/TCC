@@ -31,7 +31,7 @@ const Login: React.FC = () => {
     .then(response => {
       login();
       window.localStorage.setItem("token", response.token);
-      navigate('/chat');
+      navigate('/home');
     })
     .catch(error => {
       console.error("Erro ao fazer login:", error.response.data);
@@ -39,7 +39,7 @@ const Login: React.FC = () => {
   };
 
   useEffect(() => {
-    if(isAuthenticated) navigate('/chat');
+    if(isAuthenticated) navigate('/home');
   }, []);
 
 
