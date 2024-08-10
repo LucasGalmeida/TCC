@@ -8,6 +8,7 @@ import LayoutWithSider from './components/LayoutWithSider';
 import RequireAuth from './components/RequireAuth';
 import DocumentView from './view/DocumentView';
 import HomeView from './view/HomeView';
+import ChatView from './view/ChatView';
 
 function App() {
 
@@ -28,6 +29,13 @@ function App() {
             <RequireAuth>
               <LayoutWithSider>
                 <DocumentView /> 
+              </LayoutWithSider>
+            </RequireAuth>
+          } />
+          <Route path="/chat/:chatId" element={
+            <RequireAuth>
+              <LayoutWithSider>
+                <ChatView /> 
               </LayoutWithSider>
             </RequireAuth>
           } />

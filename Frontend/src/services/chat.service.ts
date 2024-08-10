@@ -22,6 +22,16 @@ class ChatService {
             throw error;
         }
     }
+
+    static async newChat(title:string) {
+        try {
+            const response = await backend.post(route + `/${title}`);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
 }
 
 export default ChatService;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm } from 'antd';
+import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm, Input } from 'antd';
 import { DeleteOutlined, CheckOutlined, CloseOutlined, UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -17,6 +17,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   const [documents, setDocuments] = useState<any>([]);
   const [chats, setChats] = useState<any>([]);
+  const [chatTitle, setChatTitle] = useState<string>('');
 
   useEffect(() => {
     buscarMeusDocumentos();
@@ -72,13 +73,9 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [arquivosASeremSalvos, setArquivosASeremSalvos] = useState<any[]>([]);
-  const [modalTitle, setModalTitle] = useState("Titulo");
+  const [modalType, setModalType] = useState(1);
   const showModal = (tipo:number) => {
-    if(tipo == 1){
-      setModalTitle("Adicionar Documento")
-    } else if(tipo == 2){
-      setModalTitle("Iniciar novo chat")
-    }
+    setModalType(tipo);
     setIsModalVisible(true)
   }
 
@@ -99,6 +96,16 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       })
       .catch(error => {
         console.error("Erro ao salvar documentos: ", error.response.data);
+      });
+    } else if(tipo == 2){
+      ChatService.newChat(chatTitle)
+      .then(response => {
+        message.success('Chat criado com sucesso!');
+        const updatedChats = [...chats, response]
+        setChats(updatedChats);
+      })
+      .catch(_ => {
+        message.error('Erro ao criar chat.');
       });
     }
     setIsModalVisible(false);
@@ -188,11 +195,13 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
               Novo chat
             </Button>
           ),
+          style: { paddingLeft: '0px'},
           key: "addChat",
         },
-        ...chats.map((doc:any) => ({
-          label: doc.title,
-          key: doc.id,
+        ...chats.map((chat:any) => ({
+          label: chat.title,
+          key: chat.id,
+          onClick: () => navigate(`/chat/${chat.id}`)
         })),
       ],
     }
@@ -247,7 +256,10 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       </Layout>
 
 
-      <Modal title={modalTitle} open={isModalVisible} onOk={() => handleOk(1)} onCancel={handleCancel}>
+      <Modal title={modalType == 1 ? 'Adicionar Documento' : 'Iniciar novo chat'} open={isModalVisible} onOk={() => handleOk(modalType)} onCancel={handleCancel}>
+        {
+        modalType == 1 
+        ?
         <Upload
           name="file"
           customRequest={({ file }) => {
@@ -264,6 +276,17 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         >
           <Button icon={<UploadOutlined />}>Clique para anexar o PDF</Button>
         </Upload>
+        :
+        <>
+          <Input 
+            placeholder="Digite o título do chat (máx. 50 caracteres)" 
+            maxLength={50}
+            value={chatTitle}
+            onChange={(e) => setChatTitle(e.target.value)}
+            />
+        </>
+        }
+        
       </Modal>
 
     </Layout>
