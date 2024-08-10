@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm } from 'antd';
 import { DeleteOutlined, CheckOutlined, CloseOutlined, UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import DocumentService from '../services/document.service';
+import IAService from '../services/ia.service';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -31,9 +32,18 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     });
   }
 
-  function processarDocumento(id:number){
-    console.log(id);
-    // chama rota de processar por id, ao voltar troca status do doc
+  function processarDocumento(docId:number){
+    IAService.processDocumentById(docId)
+      .then(response => {
+        message.success('Documento processado com sucesso!');
+        const updatedDocuments = documents.map((doc: any) => 
+          doc.id === docId ? { ...doc, processed: true } : doc
+        );
+        setDocuments(updatedDocuments);
+      })
+      .catch(error => {
+        message.error('Erro ao excluir o documento.');
+      });
   }
 
   const excluirDocumento = (docId: string) => {
@@ -41,6 +51,8 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       .then(response => {
         message.success('Documento excluído com sucesso!');
         setDocuments(documents.filter((doc: any) => doc.id !== docId));
+        const { documentId } = useParams<{ documentId: string }>();
+        if(documentId == docId) navigate("/home");
       })
       .catch(error => {
         message.error('Erro ao excluir o documento.');

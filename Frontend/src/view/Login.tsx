@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { Form, Input, Button, Checkbox, FormProps } from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../services/auth.service";
 import { useAuthContext } from "../context/AuthContext";
@@ -8,7 +7,6 @@ import { useAuthContext } from "../context/AuthContext";
 type FieldType = {
   login?: string;
   password?: string;
-  remember?: string;
 };
 
 const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
@@ -80,7 +78,7 @@ const Login: React.FC = () => {
           <Input.Password />
         </Form.Item>
 
-        <Form.Item>
+        {/* <Form.Item>
           <Form.Item<FieldType>
             name="remember"
             valuePropName="checked"
@@ -89,7 +87,7 @@ const Login: React.FC = () => {
             <Checkbox>Remember me</Checkbox>
           </Form.Item>
           
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item wrapperCol={{  span: 24 }}>
           <Button type="primary" htmlType="submit">
