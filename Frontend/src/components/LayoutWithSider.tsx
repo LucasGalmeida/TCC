@@ -35,7 +35,6 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const showModal = () => setIsModalVisible(true);
   const handleOk = () => {
     setIsModalVisible(false);
-    console.log("TESTE")
   };
   const handleCancel = () => setIsModalVisible(false);
 
@@ -46,10 +45,6 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       key: "documents",
       icon: <FileOutlined />,
       children: [
-        ...documents.map((doc:any) => ({
-          label: doc.name,
-          key: doc.id,
-        })),
         {
           label: (
             <Button 
@@ -62,7 +57,13 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </Button>
           ),
           key: "addDocument",
-        }
+        },
+        ...documents.map((doc:any) => ({
+          label: doc.name,
+          key: doc.id,
+          style: {whiteSpace: 'normal', height: 'auto'},
+          onClick: () => navigate(`/document/${doc.id}`)
+        })),
       ],
     },
     {
@@ -70,10 +71,6 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       key: "chats",
       icon: <PhoneOutlined />,
       children: [
-        ...chats.map((doc:any) => ({
-          label: doc.title,
-          key: doc.id,
-        })),
         {
           label: (
             <Button 
@@ -86,7 +83,11 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </Button>
           ),
           key: "addChat",
-        }
+        },
+        ...chats.map((doc:any) => ({
+          label: doc.title,
+          key: doc.id,
+        })),
       ],
     }
   ];

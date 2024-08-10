@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import Chat from './view/Chat';
 import Login from './view/Login';
 import ErrorPage from './view/NotFound';
 import Register from './view/Register';
 import { AuthContextProvider } from './context/AuthContext';
 import LayoutWithSider from './components/LayoutWithSider';
 import RequireAuth from './components/RequireAuth';
+import ChatView from './view/ChatView';
+import DocumentView from './view/DocumentView';
 
 function App() {
 
@@ -20,7 +21,14 @@ function App() {
           <Route path="/chat" element={
             <RequireAuth>
               <LayoutWithSider>
-                <Chat />
+                <ChatView />
+              </LayoutWithSider>
+            </RequireAuth>
+          } />
+          <Route path="/document/:documentId" element={
+            <RequireAuth>
+              <LayoutWithSider>
+                <DocumentView /> 
               </LayoutWithSider>
             </RequireAuth>
           } />

@@ -51,8 +51,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final AuthService authService;
     private final DocumentRepository repository;
 
-    @Override
-    public String saveDocument(MultipartFile file, Integer userId, String dateUpload) throws IOException {
+    private String saveDocument(MultipartFile file, Integer userId, String dateUpload, Document document) throws IOException {
         validateDocumentSize(file.getSize());
         validateDocumentType(file.getContentType());
 
@@ -64,6 +63,8 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         Path fullPath = directoryPath.resolve(newDocumentName);
+        document.setUrl(fullPath.toString());
+        repository.save(document);
         try {
             file.transferTo(fullPath.toFile());
         } catch (IOException e) {
@@ -185,7 +186,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setUser(authService.findAuthenticatedUser());
         document = repository.save(document);
         try {
-            saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER));
+            saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER), document);
         } catch (IOException e){
             throw new DocumentStorageException("Failed to store file: " + file.getOriginalFilename(), e);
         }

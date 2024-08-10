@@ -12,6 +12,16 @@ class DocumentService {
             throw error;
         }
     }
+
+    static async getDocumentById(id:string) {
+        try {
+            const response = await backend.get(route + `/${id}`);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
 }
 
 export default DocumentService;

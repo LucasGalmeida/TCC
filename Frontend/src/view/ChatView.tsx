@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-const Chat: React.FC = () => {
+const ChatView: React.FC = () => {
 
   return (
     <p>
@@ -30,4 +30,4 @@ const Chat: React.FC = () => {
   );
 };
 
-export default Chat;
+export default ChatView;

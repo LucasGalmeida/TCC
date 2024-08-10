@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.List;
 
 public interface DocumentService {
-    String saveDocument(MultipartFile file, Integer id, String dateUpload) throws IOException;
 
     Resource getDocument(Path fullPath) throws IOException;
 

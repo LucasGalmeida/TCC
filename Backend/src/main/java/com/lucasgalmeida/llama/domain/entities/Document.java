@@ -30,6 +30,7 @@ public class Document {
     @ManyToOne
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_docs_remetentes_pagador_frete_id"))
     private User user;
+    private String url;
 
     @JsonBackReference("document-vector-store-vector")
     @ManyToMany
