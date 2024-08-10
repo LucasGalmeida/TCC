@@ -42,7 +42,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         setDocuments(updatedDocuments);
       })
       .catch(error => {
-        message.error('Erro ao excluir o documento.');
+        message.error('Erro ao processar o documento.');
       });
   }
 

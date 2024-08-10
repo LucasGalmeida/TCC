@@ -28,7 +28,7 @@ public class Document {
     private LocalDateTime dateUpload;
     private boolean processed;
     @ManyToOne
-    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_docs_remetentes_pagador_frete_id"))
+    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_documents_user_id"))
     private User user;
 
     @JsonBackReference("document-vector-store-vector")

@@ -1,2 +1,2 @@
 ALTER TABLE public.documents
-ADD COLUMN processed boolean DEFAULT false;
+ADD COLUMN processed boolean DEFAULT false NOT NULL;
