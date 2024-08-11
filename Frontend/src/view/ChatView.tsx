@@ -2,30 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ChatService from '../services/chat.service';
 import TextArea from 'antd/es/input/TextArea';
-import { Button } from 'antd';
+import { Button, Spin } from 'antd';
 import { ChatHistoryEnum } from '../types/ChatHistoryEnum';
 
-
 const ChatView: React.FC = () => {
-
   const { chatId } = useParams<{ chatId: string }>();
-  const [chatHistory, setChatHistory] = useState<any>([]);
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
+  const [isResponding, setIsResponding] = useState<boolean>(false);
 
   useEffect(() => {
-    if(chatId){
+    if (chatId) {
       buscarHistoricoPorChatId();
     }
-  }, [chatId])
+  }, [chatId]);
 
-  function buscarHistoricoPorChatId(){
+  function buscarHistoricoPorChatId() {
     ChatService.getChatHistoryById(chatId!)
-    .then(response => {
-      setChatHistory(response);
-    })
-    .catch(error => {
-      console.error("Erro ao buscar histórico por chat id: ", error.response.data);
-    });
+      .then(response => {
+        setChatHistory(response);
+      })
+      .catch(error => {
+        console.error("Erro ao buscar histórico por chat id: ", error.response.data);
+      });
   }
 
   function handleSendMessage() {
@@ -38,12 +37,18 @@ const ChatView: React.FC = () => {
 
       setChatHistory([...chatHistory, userMessage]);
       setNewMessage('');
-      ChatService.chatEmbedding(chatId, userMessage.message).then(response => {
-        setChatHistory([...chatHistory, response]);
-      })
-      .catch(error => {
-        console.error("Erro ao enviar request para o backend: ", error.response.data);
-      });
+      setIsResponding(true);
+
+      ChatService.chatEmbedding(chatId, userMessage.message)
+        .then(response => {
+          setChatHistory(prevHistory => [...prevHistory, response]);
+        })
+        .catch(error => {
+          console.error("Erro ao enviar request para o backend: ", error.response.data);
+        })
+        .finally(() => {
+          setIsResponding(false);
+        });
     }
   }
 
@@ -75,6 +80,11 @@ const ChatView: React.FC = () => {
             </div>
           </div>
         ))}
+        {isResponding && (
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '10px' }}>
+            <Spin tip="Chat IA está digitando..." />
+          </div>
+        )}
       </div>
       <div style={{ padding: '10px', borderTop: '1px solid #f0f0f0' }}>
         <TextArea
