@@ -32,6 +32,26 @@ class ChatService {
             throw error;
         }
     }
+
+    static async getChatHistoryById(id:any) {
+        try {
+            const response = await backend.get(route + `/history/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    static async chatEmbedding(chatId:any, query: string) {
+        try {
+            const response = await backend.post(route + `/chat-embedding/${chatId}`, {query:query});
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
 }
 
 export default ChatService;

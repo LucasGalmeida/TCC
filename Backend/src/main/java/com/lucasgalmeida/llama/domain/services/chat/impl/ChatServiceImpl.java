@@ -147,4 +147,9 @@ public class ChatServiceImpl implements ChatService {
         return chatRepository.findByUser_Id(user.getId());
     }
 
+    @Override
+    public List<ChatHistory> findChatHistoryByChatId(Integer id) {
+        return chatHistoryRepository.findByChat_Id(id);
+    }
+
 }

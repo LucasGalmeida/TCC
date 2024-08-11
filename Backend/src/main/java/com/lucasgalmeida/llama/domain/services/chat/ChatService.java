@@ -16,4 +16,5 @@ public interface ChatService {
     Set<VectorStore> findByFileName(String fileName);
     Chat createNewChat(String title);
     List<Chat> findAllChatsByUser();
+    List<ChatHistory> findChatHistoryByChatId(Integer id);
 }

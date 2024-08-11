@@ -62,4 +62,9 @@ public class ChatController {
     public ResponseEntity<List<Chat>> myChats() {
         return ResponseEntity.ok(chatService.findAllChatsByUser());
     }
+
+    @GetMapping("/history/{id}")
+    public ResponseEntity<List<ChatHistory>> chatHistory(@PathVariable Integer id) {
+        return ResponseEntity.ok(chatService.findChatHistoryByChatId(id));
+    }
 }
