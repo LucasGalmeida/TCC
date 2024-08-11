@@ -11,9 +11,9 @@ export default backend;
 
 
 backend.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token'); // Retrieve the token from localStorage
+    const token = localStorage.getItem('token');
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`; // Add the token to the Authorization header
+        config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 }, (error) => {

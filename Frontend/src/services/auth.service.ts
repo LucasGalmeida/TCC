@@ -12,6 +12,15 @@ class AuthService {
             throw error;
         }
     }
+    static async register(request:any) {
+        try {
+            const response = await backend.post(route + "/register", request);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
 }
 
 export default AuthService;

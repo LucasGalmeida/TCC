@@ -3,21 +3,35 @@ import { Form, Input, Button } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { FormInstance } from 'antd/es/form';
 import { useNavigate } from 'react-router-dom';
+import AuthService from '../services/auth.service';
+import { useAuthContext } from '../context/AuthContext';
 
 interface RegistrationFormValues {
   name: string;
-  email: string;
+  login: string;
   password: string;
   confirm: string;
 }
 
 const RegistrationForm: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuthContext();
 
   const onFinish = (values: RegistrationFormValues) => {
-    console.log('Received values from form: ', values);
-    // Add your logic to submit the form data to the backend here 
-    // navigate('/');
+      const data = {
+        name: values.name,
+        login: values.login,
+        password: values.password
+      }
+      AuthService.register(data)
+      .then(response => {
+        login();
+        window.localStorage.setItem("token", response.token);
+        navigate('/home');
+      })
+      .catch(error => {
+        console.error("Erro ao fazer login:", error.response.data);
+    });
   };
 
   return (
