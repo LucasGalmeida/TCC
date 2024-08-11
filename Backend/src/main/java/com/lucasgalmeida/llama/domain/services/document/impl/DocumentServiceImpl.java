@@ -3,6 +3,7 @@ package com.lucasgalmeida.llama.domain.services.document.impl;
 import com.lucasgalmeida.llama.domain.entities.Document;
 import com.lucasgalmeida.llama.domain.entities.User;
 import com.lucasgalmeida.llama.domain.entities.VectorStore;
+import com.lucasgalmeida.llama.domain.exceptions.auth.UnauthorizedException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentNotFoundException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentStorageException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentTypeException;
@@ -213,9 +214,12 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Document getDocumentById(Integer id){
-        return repository.findById(id).orElseThrow(() ->
-                new DocumentNotFoundException("Document not found")
-        );
+        Document document = repository.findById(id).orElseThrow(() -> new DocumentNotFoundException("Document not found"));
+        User user = authService.findAuthenticatedUser();
+        if(!user.getId().equals(document.getUser().getId())){
+            throw new UnauthorizedException("User not authorized to access this document");
+        }
+        return document;
     }
 
     @Override

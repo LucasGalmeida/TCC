@@ -4,7 +4,9 @@ import com.lucasgalmeida.llama.application.constants.ChatHistoryEnum;
 import com.lucasgalmeida.llama.domain.entities.Chat;
 import com.lucasgalmeida.llama.domain.entities.ChatHistory;
 import com.lucasgalmeida.llama.domain.entities.User;
+import com.lucasgalmeida.llama.domain.exceptions.auth.UnauthorizedException;
 import com.lucasgalmeida.llama.domain.exceptions.chat.ChatNotFoundException;
+import com.lucasgalmeida.llama.domain.exceptions.document.DocumentNotFoundException;
 import com.lucasgalmeida.llama.domain.repositories.ChatHistoryRepository;
 import com.lucasgalmeida.llama.domain.repositories.ChatRepository;
 import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
@@ -149,6 +151,11 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public List<ChatHistory> findChatHistoryByChatId(Integer id) {
+        Chat chat = chatRepository.findById(id).orElseThrow(() -> new ChatNotFoundException("Chat not found"));
+        User user = authService.findAuthenticatedUser();
+        if(!user.getId().equals(chat.getUser().getId())){
+            throw new UnauthorizedException("User not authorized to access this document");
+        }
         return chatHistoryRepository.findByChat_Id(id);
     }
 

@@ -1,6 +1,7 @@
 package com.lucasgalmeida.llama.application.advice;
 
 import com.lucasgalmeida.llama.domain.exceptions.auth.InvalidCredentialsException;
+import com.lucasgalmeida.llama.domain.exceptions.auth.UnauthorizedException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserAlreadyExistsException;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UserNotFoundException;
 import com.lucasgalmeida.llama.domain.exceptions.chat.ChatNotFoundException;
@@ -98,6 +99,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     private ResponseEntity<String> invalidCredentialsHandler(InvalidCredentialsException exception) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<String> handleUnauthorizedException(UnauthorizedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 
     // DOCUMENTS
