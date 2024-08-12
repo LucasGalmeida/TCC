@@ -71,6 +71,19 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       });
   };
 
+  const excluirChat = (chatId: string) => {
+    ChatService.deleteChatById(chatId)
+      .then(_ => {
+        message.success('Chat excluído com sucesso!');
+        setChats(chats.filter((chat: any) => chat.id !== chatId));
+        const { chatId } = useParams<{ chatId: string }>();
+        if(chatId == chatId) navigate("/home");
+      })
+      .catch(_ => {
+        message.error('Erro ao excluir o chat.');
+      });
+  };
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [arquivosASeremSalvos, setArquivosASeremSalvos] = useState<any[]>([]);
   const [modalType, setModalType] = useState(1);
@@ -199,7 +212,20 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
           key: "addChat",
         },
         ...chats.map((chat:any) => ({
-          label: chat.title,
+          label: (
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              {chat.title}
+              <Popconfirm
+                title="Excluir chat"
+                description="Tem certeza que você deseja excluir este chat?"
+                onConfirm={() => excluirChat(chat.id)} 
+                okText="EXCLUIR"
+                cancelText="CANCELAR"
+              >
+                <Button danger icon={<DeleteOutlined />} style={{ marginLeft: '8px' }}></Button>
+              </Popconfirm>
+            </span>
+          ),
           key: chat.id,
           onClick: () => navigate(`/chat/${chat.id}`)
         })),

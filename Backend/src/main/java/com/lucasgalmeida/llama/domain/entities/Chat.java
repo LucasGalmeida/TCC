@@ -1,11 +1,14 @@
 package com.lucasgalmeida.llama.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Table(name = "chat")
@@ -22,6 +25,10 @@ public class Chat {
     @OneToOne
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_chat_user_id"))
     private User user;
+
+    @JsonManagedReference("chat-history-chat")
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatHistory> chatHistory;
 
     public Chat(String title, User user) {
         this.title = title;

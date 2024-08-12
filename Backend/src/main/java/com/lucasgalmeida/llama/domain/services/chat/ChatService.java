@@ -17,4 +17,5 @@ public interface ChatService {
     Chat createNewChat(String title);
     List<Chat> findAllChatsByUser();
     List<ChatHistory> findChatHistoryByChatId(Integer id);
+    void deleteChatById(Integer id);
 }

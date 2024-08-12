@@ -67,4 +67,10 @@ public class ChatController {
     public ResponseEntity<List<ChatHistory>> chatHistory(@PathVariable Integer id) {
         return ResponseEntity.ok(chatService.findChatHistoryByChatId(id));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteChatById(@PathVariable Integer id) {
+        chatService.deleteChatById(id);
+        return ResponseEntity.ok().build();
+    }
 }

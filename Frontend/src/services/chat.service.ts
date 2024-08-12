@@ -52,6 +52,16 @@ class ChatService {
             throw error;
         }
     }
+
+    static async deleteChatById(id:any) {
+        try {
+            const response = await backend.delete(route + `/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
 }
 
 export default ChatService;

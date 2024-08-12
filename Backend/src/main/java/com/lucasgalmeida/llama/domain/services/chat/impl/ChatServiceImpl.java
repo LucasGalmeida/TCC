@@ -159,4 +159,11 @@ public class ChatServiceImpl implements ChatService {
         return chatHistoryRepository.findByChat_Id(id);
     }
 
+    @Override
+    @Transactional
+    public void deleteChatById(Integer id) {
+        Chat chat = chatRepository.findById(id).orElseThrow(() -> new ChatNotFoundException("Chat not found"));
+        chatRepository.delete(chat);
+    }
+
 }
