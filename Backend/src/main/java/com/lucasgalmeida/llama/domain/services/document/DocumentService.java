@@ -25,4 +25,5 @@ public interface DocumentService {
 
     Path getFullPath(Document document);
     List<Document> getMyDocuments();
+    List<String> getFileNamesFromAllDocuments();
 }

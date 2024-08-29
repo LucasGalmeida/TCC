@@ -30,6 +30,7 @@ import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -100,9 +101,32 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private List<String> buscaDocumentosSemelhantes(String message) {
-        // todo - aqui busca na tabela inteira. Mas e se eu quiser buscar apenas as do usuário X?
-        List<Document> documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3));
-        return documentosSemelhantes.stream().map(Document::getContent).toList();
+        try {
+            List<String> fileNames = documentService.getFileNamesFromAllDocuments();
+            List<Document> documentosSemelhantes;
+            if(fileNames.isEmpty()){
+                documentosSemelhantes = new ArrayList<>();
+            } else {
+                FilterExpressionBuilder b = new FilterExpressionBuilder();
+                FilterExpressionBuilder.Op op = null;
+                for (String fileName : fileNames) {
+                    if (op == null) {
+                        op = b.eq("file_name", fileName);
+                    }
+                    else {
+                        op = b.or(op, b.eq("file_name", fileName));
+                    }
+                }
+                documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3)
+                        .withFilterExpression(op.build())
+                );
+            }
+            return documentosSemelhantes.stream().map(Document::getContent).toList();
+        } catch (Exception e){
+            e.printStackTrace();
+            throw e;
+        }
+
     }
 
     @Transactional

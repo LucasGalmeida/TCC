@@ -91,9 +91,13 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Path getFullPath(Document document){
+        return Paths.get(path, document.getUser().getId().toString(), getFinalFileName(document));
+    }
+
+    public String getFinalFileName(Document document){
         String fileNameWithoutExtension = removeExtension(document.getName());
         String extension = getExtension(document.getName());
-        return Paths.get(path, document.getUser().getId().toString(), fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + "." + extension);
+        return fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + "." + extension;
     }
 
     @Override
@@ -103,6 +107,12 @@ public class DocumentServiceImpl implements DocumentService {
             return repository.findByUser_Id(user.getId());
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    public List<String> getFileNamesFromAllDocuments(){
+        List<Document> myDocuments = getMyDocuments();
+        return myDocuments.stream().map(this::getFinalFileName).toList();
     }
 
     public void deleteDocument(Path fullPath) {
