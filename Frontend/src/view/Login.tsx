@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Form, Input, Button, Checkbox, FormProps } from "antd";
+import React, { useEffect, useState } from "react";
+import { Form, Input, Button, FormProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../services/auth.service";
 import { useAuthContext } from "../context/AuthContext";
@@ -9,22 +9,20 @@ type FieldType = {
   password?: string;
 };
 
-const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
-  console.log("Success:", values);
-};
-
 const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
   console.log("Failed:", errorInfo);
 };
 
 const Login: React.FC = () => {
   const { login, isAuthenticated } = useAuthContext();
+  const [loading, setLoading] = useState(false);
 
   const onFinish = (values: any) => {
     const data = {
       login: values.login,
       password: values.password
     }
+    setLoading(true);
     AuthService.login(data)
     .then(response => {
       login();
@@ -32,6 +30,7 @@ const Login: React.FC = () => {
       navigate('/home');
     })
     .catch(error => {
+      setLoading(false);
       console.error("Erro ao fazer login:", error.response.data);
   });
   };
@@ -90,7 +89,7 @@ const Login: React.FC = () => {
         </Form.Item> */}
 
         <Form.Item wrapperCol={{  span: 24 }}>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={loading} disabled={loading}>
             Login
           </Button>
           <Button type="default" onClick={() => navigate('/register')} style={{ marginLeft: '10px' }}>

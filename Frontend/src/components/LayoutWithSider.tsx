@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm, Input } from 'antd';
-import { DeleteOutlined, CheckOutlined, CloseOutlined, UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm, Input, Tooltip } from 'antd';
+import { DeleteOutlined,  UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { MenuProps } from 'antd';
@@ -14,7 +14,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const {token: { colorBgContainer, borderRadiusLG }} = theme.useToken();
-
+  const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState<any>([]);
   const [chats, setChats] = useState<any>([]);
   const [chatTitle, setChatTitle] = useState<string>('');
@@ -45,6 +45,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   }
 
   function processarDocumento(docId:number){
+    setLoading(true);
     ChatService.processDocumentById(docId)
       .then(_ => {
         message.success('Documento processado com sucesso!');
@@ -53,12 +54,16 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         );
         setDocuments(updatedDocuments);
       })
-      .catch(_ => {
-        message.error('Erro ao processar o documento.');
-      });
+      .catch(error => {
+        message.error(error.response.data);
+      })
+      .finally(() => 
+        setLoading(false)
+      )
   }
 
   const excluirDocumento = (docId: string) => {
+    setLoading(true);
     DocumentService.deleteDocumentById(docId)
       .then(_ => {
         message.success('Documento excluído com sucesso!');
@@ -66,22 +71,30 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         const { documentId } = useParams<{ documentId: string }>();
         if(documentId == docId) navigate("/home");
       })
-      .catch(_ => {
-        message.error('Erro ao excluir o documento.');
-      });
+      .catch(error => {
+        message.error(error.response.data);
+      })
+      .finally(() => 
+        setLoading(false)
+      )
   };
 
-  const excluirChat = (chatId: string) => {
-    ChatService.deleteChatById(chatId)
+  const excluirChat = (chatRemoverId: string) => {
+    setLoading(true);
+    ChatService.deleteChatById(chatRemoverId)
       .then(_ => {
         message.success('Chat excluído com sucesso!');
-        setChats(chats.filter((chat: any) => chat.id !== chatId));
-        const { chatId } = useParams<{ chatId: string }>();
-        if(chatId == chatId) navigate("/home");
+        setChats(chats.filter((chat: any) => chat.id !== chatRemoverId));
+        // const { chatId } = useParams<{ chatId: string }>();
+        // if(chatId == chatRemoverId) navigate("/home");
+        navigate("/home");
       })
       .catch(_ => {
         message.error('Erro ao excluir o chat.');
-      });
+      })
+      .finally(() => 
+        setLoading(false)
+      )
   };
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -102,6 +115,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       arquivosASeremSalvos.forEach(file => {
         formData.append('files', file);
       });
+      setLoading(true);
       DocumentService.saveDocuments(formData)
       .then(response => {
         setDocuments([...documents, ...response]);
@@ -109,8 +123,12 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       })
       .catch(error => {
         console.error("Erro ao salvar documentos: ", error.response.data);
-      });
+      })
+      .finally(() => 
+        setLoading(false)
+      )
     } else if(tipo == 2){
+      setLoading(true);
       ChatService.newChat(chatTitle)
       .then(response => {
         message.success('Chat criado com sucesso!');
@@ -119,7 +137,10 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       })
       .catch(_ => {
         message.error('Erro ao criar chat.');
-      });
+      })
+      .finally(() => 
+        setLoading(false)
+      )
     }
     setIsModalVisible(false);
   };
@@ -160,34 +181,47 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         },
         ...documents.map((doc:any) => ({
           label: (
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-              {doc.processed ? (
-                <CheckOutlined style={{ color: 'green', marginRight: 8, marginLeft: 8 }} />
-              ) : (
-                <Popconfirm
-                  title="Processar documento"
-                  description="Tem certeza que você deseja iniciar o processamento desse documento (esse processo pode levar vários minutos)"
-                  onConfirm={() => processarDocumento(doc.id)}
-                  okText="PROCESSAR"
-                  cancelText="CANCELAR"
-                >
-                  <Button danger icon={<CloseOutlined style={{ color: 'red' }} />} style={{padding: '6px', marginRight: '8px', marginLeft: '8px'}}></Button>
-                </Popconfirm>
-              )}
+            <Tooltip 
+            title={
+              !doc.processed ? (
+                <span>
+                  Este documento ainda não foi processado.
+                  <Button 
+                    type="primary" 
+                    size="small" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      processarDocumento(doc.id);
+                    }} 
+                    loading={loading} disabled={loading}
+                    style={{ marginLeft: '8px', marginTop: '4px' }}
+                  >
+                    Processar
+                  </Button>
+                </span>
+              ) : ""
+            } 
+            placement="top"
+          >
+            <span style={{ display: 'flex', justifyContent: 'space-around', color: 'black' }}>
               {doc.name}
               <Popconfirm
                 title="Excluir documento"
                 description="Tem certeza que você deseja excluir este documento?"
-                onConfirm={() => excluirDocumento(doc.id)} 
+                onConfirm={(e) => {
+                  e?.stopPropagation();
+                  excluirDocumento(doc.id);
+                }} 
                 okText="EXCLUIR"
                 cancelText="CANCELAR"
               >
-                <Button danger icon={<DeleteOutlined />} style={{ marginLeft: '8px' }}></Button>
+                <Button type="text" icon={<DeleteOutlined />} style={{ marginLeft: '8px', marginTop: '4px', color: 'black' }} onClick={(e) => e.stopPropagation()} loading={loading} disabled={loading}/>
               </Popconfirm>
             </span>
+          </Tooltip>
           ),
           key: doc.id,
-          style: {whiteSpace: 'normal', height: 'auto', border: '1px solid white', paddingLeft: '0px'},
+          style: {whiteSpace: 'normal', height: 'auto', border: `1px solid ${doc.processed ? 'green' : 'red'}`, paddingLeft: '0px', paddingRight: '0px', backgroundColor: '#efefef'},
           onClick: () => navigate(`/document/${doc.id}`)
         })),
       ],
@@ -213,7 +247,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         },
         ...chats.map((chat:any) => ({
           label: (
-            <span style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ display: 'flex', justifyContent: 'space-around', color: 'black' }}>
               {chat.title}
               <Popconfirm
                 title="Excluir chat"
@@ -222,11 +256,12 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 okText="EXCLUIR"
                 cancelText="CANCELAR"
               >
-                <Button danger icon={<DeleteOutlined />} style={{ marginLeft: '8px' }}></Button>
+                <Button type='text' icon={<DeleteOutlined />} style={{ marginLeft: '8px', marginTop: '4px' }} loading={loading} disabled={loading}></Button>
               </Popconfirm>
             </span>
           ),
           key: chat.id,
+          style: {whiteSpace: 'normal', height: 'auto', border: `1px solid white`, paddingLeft: '0px', paddingRight: '0px', backgroundColor: '#efefef'},
           onClick: () => navigate(`/chat/${chat.id}`)
         })),
       ],

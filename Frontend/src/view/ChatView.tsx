@@ -10,6 +10,7 @@ const ChatView: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [isResponding, setIsResponding] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (chatId) {
@@ -38,7 +39,7 @@ const ChatView: React.FC = () => {
       setChatHistory([...chatHistory, userMessage]);
       setNewMessage('');
       setIsResponding(true);
-
+      setLoading(true);
       ChatService.chatEmbedding(chatId, userMessage.message)
         .then(response => {
           setChatHistory(prevHistory => [...prevHistory, response]);
@@ -48,6 +49,7 @@ const ChatView: React.FC = () => {
         })
         .finally(() => {
           setIsResponding(false);
+          setLoading(false);
         });
     }
   }
@@ -82,7 +84,9 @@ const ChatView: React.FC = () => {
         ))}
         {isResponding && (
           <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '10px' }}>
-            <Spin tip="Chat IA está digitando..." />
+            <Spin tip="Chat PDF está digitando..." >
+              <div></div>
+            </Spin>
           </div>
         )}
       </div>
@@ -98,7 +102,7 @@ const ChatView: React.FC = () => {
             handleSendMessage();
           }}
         />
-        <Button type="primary" onClick={handleSendMessage} style={{ marginTop: '10px', float: 'right' }}>
+        <Button type="primary" onClick={handleSendMessage} style={{ marginTop: '10px', float: 'right' }} loading={loading} disabled={loading}>
           Enviar
         </Button>
       </div>

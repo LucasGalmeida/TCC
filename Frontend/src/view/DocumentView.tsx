@@ -31,9 +31,8 @@ const DocumentView: React.FC = () => {
     pdfUrl 
     ?
     <div>
-      <h1>PDF Preview</h1>
+      <h1 style={{textAlign: 'center', marginBottom: '32px'}}>Pré visualização do documento</h1> 
       <PdfPreview pdfUrl={pdfUrl} />
-      {/* <img src={pdfUrl} /> */}
     </div>
     :
     <>
