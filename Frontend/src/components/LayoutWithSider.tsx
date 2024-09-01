@@ -256,16 +256,19 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
               Home
             </Link>
           </div>
-            <Button
-              type="text"
-              icon={<LogoutOutlined />}
-              onClick={() => {
+          <Popconfirm
+              title="Sair do sistema"
+              description="Tem certeza que você deseja sair do sistema?"
+              onConfirm={() => {
                 logout();
                 navigate('/');
-              }}
-              style={{ fontSize: '16px', width: 64, height: 64, color: "white" }}
+              }} 
+              okText="SAIR"
+              cancelText="CANCELAR"
+            >
+              <Button type="text" icon={<LogoutOutlined />} style={{ fontSize: '16px', width: 64, height: 64, color: "white" }}
             />
-          
+            </Popconfirm>
         </Header>
         <Content
           style={{

@@ -89,6 +89,7 @@ const ChatView: React.FC = () => {
       <div style={{ padding: '10px', borderTop: '1px solid #f0f0f0' }}>
         <TextArea
           rows={2}
+          autoSize 
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Digite sua mensagem..."
