@@ -3,6 +3,7 @@ import { Form, Input, Button, FormProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../services/auth.service";
 import { useAuthContext } from "../context/AuthContext";
+import { LoginRequestDTO } from "../types/LoginRequestDTO";
 
 type FieldType = {
   login?: string;
@@ -17,7 +18,7 @@ const Login: React.FC = () => {
   const { login, isAuthenticated } = useAuthContext();
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values: any) => {
+  const onFinish = (values: LoginRequestDTO) => {
     const data = {
       login: values.login,
       password: values.password

@@ -7,7 +7,7 @@ import { useParams } from 'react-router-dom';
 const DocumentView: React.FC = () => {
 
   const { documentId } = useParams<{ documentId: string }>();
-  const [pdfUrl, setPdfUrl] = useState<any>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if(documentId){

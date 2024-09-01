@@ -6,6 +6,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import DocumentService from '../services/document.service';
 import ChatService from '../services/chat.service';
+import { Document } from '../types/Document';
+import { Chat } from '../types/Chat';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -15,8 +17,8 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const {token: { colorBgContainer, borderRadiusLG }} = theme.useToken();
   const [loading, setLoading] = useState(false);
-  const [documents, setDocuments] = useState<any>([]);
-  const [chats, setChats] = useState<any>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [chats, setChats] = useState<Chat[]>([]);
   const [chatTitle, setChatTitle] = useState<string>('');
 
   useEffect(() => {
@@ -49,7 +51,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     ChatService.processDocumentById(docId)
       .then(_ => {
         message.success('Documento processado com sucesso!');
-        const updatedDocuments = documents.map((doc: any) => 
+        const updatedDocuments = documents.map((doc: Document) => 
           doc.id === docId ? { ...doc, processed: true } : doc
         );
         setDocuments(updatedDocuments);
@@ -62,14 +64,14 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       )
   }
 
-  const excluirDocumento = (docId: string) => {
+  const excluirDocumento = (docId: number) => {
     setLoading(true);
     DocumentService.deleteDocumentById(docId)
       .then(_ => {
         message.success('Documento excluído com sucesso!');
-        setDocuments(documents.filter((doc: any) => doc.id !== docId));
+        setDocuments(documents.filter((doc: Document) => doc.id !== docId));
         const { documentId } = useParams<{ documentId: string }>();
-        if(documentId == docId) navigate("/home");
+        if(Number(documentId) == docId) navigate("/home");
       })
       .catch(error => {
         message.error(error.response.data);
@@ -79,12 +81,12 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       )
   };
 
-  const excluirChat = (chatRemoverId: string) => {
+  const excluirChat = (chatRemoverId: number) => {
     setLoading(true);
     ChatService.deleteChatById(chatRemoverId)
       .then(_ => {
         message.success('Chat excluído com sucesso!');
-        setChats(chats.filter((chat: any) => chat.id !== chatRemoverId));
+        setChats(chats.filter((chat: Chat) => chat.id !== chatRemoverId));
         // const { chatId } = useParams<{ chatId: string }>();
         // if(chatId == chatRemoverId) navigate("/home");
         navigate("/home");
@@ -150,7 +152,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setIsModalVisible(false)
   };
 
-  const beforeUpload = (file: any) => {
+  const beforeUpload = (file: File) => {
     const isPDF = file.type === 'application/pdf';
     if (!isPDF) {
       message.error('Você pode apenas fazer upload de arquivos PDF!');
@@ -179,7 +181,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
           style: { paddingLeft: '0px'},
           key: "addDocument",
         },
-        ...documents.map((doc:any) => ({
+        ...documents.map((doc:Document) => ({
           label: (
             <Tooltip 
             title={
@@ -245,7 +247,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
           style: { paddingLeft: '0px'},
           key: "addChat",
         },
-        ...chats.map((chat:any) => ({
+        ...chats.map((chat:Chat) => ({
           label: (
             <span style={{ display: 'flex', justifyContent: 'space-around', color: 'black' }}>
               {chat.title}

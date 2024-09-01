@@ -4,10 +4,12 @@ import ChatService from '../services/chat.service';
 import TextArea from 'antd/es/input/TextArea';
 import { Button, Spin } from 'antd';
 import { ChatHistoryEnum } from '../types/ChatHistoryEnum';
+import { ChatHistory } from '../types/ChatHistory';
+import { Key } from 'antd/es/table/interface';
 
 const ChatView: React.FC = () => {
   const { chatId } = useParams<{ chatId: string }>();
-  const [chatHistory, setChatHistory] = useState<any[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [isResponding, setIsResponding] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ const ChatView: React.FC = () => {
   }, [chatId]);
 
   function buscarHistoricoPorChatId() {
-    ChatService.getChatHistoryById(chatId!)
+    ChatService.getChatHistoryById(Number(chatId)!)
       .then(response => {
         setChatHistory(response);
       })
@@ -30,7 +32,7 @@ const ChatView: React.FC = () => {
 
   function handleSendMessage() {
     if (newMessage.trim() !== '') {
-      const userMessage = {
+      const userMessage:ChatHistory = {
         type: ChatHistoryEnum.USER_REQUEST,
         date: new Date().toISOString(),
         message: newMessage,
@@ -40,7 +42,7 @@ const ChatView: React.FC = () => {
       setNewMessage('');
       setIsResponding(true);
       setLoading(true);
-      ChatService.chatEmbedding(chatId, userMessage.message)
+      ChatService.chatEmbedding(Number(chatId), userMessage.message)
         .then(response => {
           setChatHistory(prevHistory => [...prevHistory, response]);
         })
@@ -57,7 +59,7 @@ const ChatView: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-        {chatHistory.map((chat:any, index:any) => (
+        {chatHistory.map((chat:ChatHistory, index:Key) => (
           <div 
             key={index} 
             style={{
