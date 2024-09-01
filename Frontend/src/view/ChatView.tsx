@@ -1,24 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ChatService from '../services/chat.service';
 import TextArea from 'antd/es/input/TextArea';
-import { Button, Spin } from 'antd';
+import { Button, Checkbox, Modal, Spin } from 'antd';
 import { ChatHistoryEnum } from '../types/ChatHistoryEnum';
 import { ChatHistory } from '../types/ChatHistory';
 import { Key } from 'antd/es/table/interface';
+import { Document } from '../types/Document';
 
-const ChatView: React.FC = () => {
+interface DocumentListProps {
+  documents?: Document[];
+}
+
+const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
   const { chatId } = useParams<{ chatId: string }>();
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [isResponding, setIsResponding] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState<boolean>(false);
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<number>>(new Set());
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (chatId) {
       buscarHistoricoPorChatId();
     }
   }, [chatId]);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
 
   function buscarHistoricoPorChatId() {
     ChatService.getChatHistoryById(Number(chatId)!)
@@ -32,18 +46,18 @@ const ChatView: React.FC = () => {
 
   function handleSendMessage() {
     if (newMessage.trim() !== '') {
-      const userMessage:ChatHistory = {
-        type: ChatHistoryEnum.USER_REQUEST,
-        date: new Date().toISOString(),
-        message: newMessage,
-      };
-
-      setChatHistory([...chatHistory, userMessage]);
-      setNewMessage('');
       setIsResponding(true);
       setLoading(true);
-      ChatService.chatEmbedding(Number(chatId), userMessage.message)
+      ChatService.chatGenerico(Number(chatId), newMessage)
         .then(response => {
+          const userMessage: ChatHistory = {
+            type: ChatHistoryEnum.USER_REQUEST,
+            date: new Date().toISOString(),
+            message: newMessage,
+          };
+    
+          setChatHistory([...chatHistory, userMessage]);
+          setNewMessage('');
           setChatHistory(prevHistory => [...prevHistory, response]);
         })
         .catch(error => {
@@ -56,10 +70,50 @@ const ChatView: React.FC = () => {
     }
   }
 
+  function handleSendDocuments() {
+    if (selectedDocuments.size > 0 && newMessage.trim() !== '') {
+      const documentIds = Array.from(selectedDocuments);
+      setIsResponding(true);
+      setLoading(true);
+      ChatService.chatEmbedding(Number(chatId), newMessage, documentIds)
+      .then(response => {
+        const userMessage: ChatHistory = {
+          type: ChatHistoryEnum.USER_REQUEST,
+          date: new Date().toISOString(),
+          message: newMessage,
+        };
+        setChatHistory([...chatHistory, userMessage]);
+        setNewMessage('');
+        setChatHistory(prevHistory => [...prevHistory, response]);
+      })
+      .catch(error => {
+        console.error("Erro ao enviar request para o backend: ", error.response.data);
+      })
+      .finally(() => {
+        setIsResponding(false);
+        setLoading(false);
+        setSelectedDocuments(new Set());
+        setShowDocumentModal(false);
+      });
+    }
+  }
+
+  const handleDocumentSelection = (docId: number) => {
+    setSelectedDocuments(prevSelection => {
+      const newSelection = new Set(prevSelection);
+      if (newSelection.has(docId)) {
+        newSelection.delete(docId);
+      } else {
+        newSelection.add(docId);
+      }
+      return newSelection;
+    });
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-        {chatHistory.map((chat:ChatHistory, index:Key) => (
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }} ref={chatContainerRef}>
+        {chatHistory.map((chat: ChatHistory, index: Key) => (
           <div 
             key={index} 
             style={{
@@ -104,10 +158,31 @@ const ChatView: React.FC = () => {
             handleSendMessage();
           }}
         />
-        <Button type="primary" onClick={handleSendMessage} style={{ marginTop: '10px', float: 'right' }} loading={loading} disabled={loading}>
+        <Button type="primary" onClick={handleSendMessage} style={{ marginTop: '10px', float: 'right' }} loading={loading} disabled={loading || newMessage.trim() == ''}>
           Enviar
         </Button>
+        <Button type="default" onClick={() => setShowDocumentModal(true)} style={{ marginTop: '10px', float: 'right', marginRight: '10px' }} loading={loading} disabled={loading || newMessage.trim() == ''}>
+          Enviar com documentos
+        </Button>
       </div>
+
+      <Modal
+        title="Selecionar Documentos"
+        open={showDocumentModal}
+        onOk={handleSendDocuments}
+        onCancel={() => setShowDocumentModal(false)}
+        okText="Enviar"
+        cancelText="Cancelar"
+        confirmLoading={loading}
+      >
+        {documents?.filter(doc => doc.processed)?.map((doc) => (
+          <div key={doc.id} style={{ marginBottom: '8px' }}>
+            <Checkbox checked={selectedDocuments.has(doc.id)} onChange={() => handleDocumentSelection(doc.id)}>
+              {doc.name}
+            </Checkbox>
+          </div>
+        ))}
+      </Modal>
     </div>
   );
 };

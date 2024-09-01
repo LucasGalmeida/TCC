@@ -115,6 +115,12 @@ public class DocumentServiceImpl implements DocumentService {
         return myDocuments.stream().map(this::getFinalFileName).toList();
     }
 
+    @Override
+    public List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds){
+        List<Document> myDocuments = repository.findAllById(documentsIds);
+        return myDocuments.stream().map(this::getFinalFileName).toList();
+    }
+
     public void deleteDocument(Path fullPath) {
         try {
             log.info("Attempting to delete file at path: {}", fullPath);

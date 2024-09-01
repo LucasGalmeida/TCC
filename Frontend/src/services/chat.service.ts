@@ -43,9 +43,19 @@ class ChatService {
         }
     }
 
-    static async chatEmbedding(chatId:number, query: string) {
+    static async chatGenerico(chatId:number, query: string) {
         try {
-            const response = await backend.post(route + `/chat-embedding/${chatId}`, {query:query});
+            const response = await backend.post(route + `/chat-generico/${chatId}`, {query:query});
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    static async chatEmbedding(chatId:number, query: string, documentsIds: number[]) {
+        try {
+            const response = await backend.post(route + `/chat-embedding/${chatId}`, {query:query, documentsIds: documentsIds});
             return response.data;
         } catch (error) {
             console.error(error);

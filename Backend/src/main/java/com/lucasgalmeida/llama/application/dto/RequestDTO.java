@@ -1,3 +1,5 @@
 package com.lucasgalmeida.llama.application.dto;
 
-public record RequestDTO(String query) {}
+import java.util.List;
+
+public record RequestDTO(String query, List<Integer> documentsIds) {}

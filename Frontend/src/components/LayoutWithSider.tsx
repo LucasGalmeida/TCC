@@ -316,7 +316,9 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
             borderRadius: borderRadiusLG,
           }}
         >
-          {children}
+           {React.Children.map(children, child => 
+            React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<any>, { documents }) : child
+          )}
         </Content>
         <Footer style={{ textAlign: 'center' }}>ChatAI ©2024</Footer>
       </Layout>

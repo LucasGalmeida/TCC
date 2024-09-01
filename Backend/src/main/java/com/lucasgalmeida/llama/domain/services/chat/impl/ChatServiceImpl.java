@@ -55,9 +55,6 @@ public class ChatServiceImpl implements ChatService {
     @Value("classpath:/prompts/prompt-generico.st")
     private Resource promptGenerico;
 
-    @Value("classpath:/prompts/prompt-especifico.st")
-    private Resource promptEspecifico;
-
     @Value("classpath:/prompts/prompt-embedding.st")
     private Resource promptEmbedding;
 
@@ -66,40 +63,31 @@ public class ChatServiceImpl implements ChatService {
     private final ChatHistoryRepository chatHistoryRepository;
 
     @Override
-    public String chatGenerico(String query) {
+    public ChatHistory chatGenerico(String query, Integer chatId) {
+        Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new ChatNotFoundException("Chat not found with id: " + chatId));
+        chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.USER_REQUEST, query, chat));
         PromptTemplate promptTemplate = new PromptTemplate(promptGenerico);
         Prompt prompt = promptTemplate.create(Map.of("input", query));
         String response = chatModel.call(prompt).getResult().getOutput().getContent();
-        return response;
-    }
-
-    @Override
-    public String chatEspecifico(String query) {
-        PromptTemplate promptTemplate = new PromptTemplate(promptEspecifico);
-        Map<String, Object> promptParameters = new HashMap<>();
-        promptParameters.put("input", query);
-        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query)));
-
-        String response = chatModel.call(promptTemplate.create(promptParameters)).getResult().getOutput().getContent();
-        return response;
+        return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
     }
 
     @Override
     @Transactional
-    public ChatHistory chatEmbedding(String query, Integer chatId) {
+    public ChatHistory chatEmbedding(String query, Integer chatId, List<Integer> documentsIds) {
         Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new ChatNotFoundException("Chat not found with id: " + chatId));
         chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.USER_REQUEST, query, chat));
         PromptTemplate promptTemplate = new PromptTemplate(promptEmbedding);
         Map<String, Object> promptParameters = new HashMap<>();
         promptParameters.put("input", query);
-        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query)));
+        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query, documentsIds)));
         String response = chatModel.call(promptTemplate.create(promptParameters)).getResult().getOutput().getContent();
         return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
     }
 
-    private List<String> buscaDocumentosSemelhantes(String message) {
+    private List<String> buscaDocumentosSemelhantes(String message, List<Integer> documentsIds) {
         try {
-            List<String> fileNames = documentService.getFileNamesFromAllDocuments();
+            List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
             List<Document> documentosSemelhantes;
             if(fileNames.isEmpty()){
                 documentosSemelhantes = new ArrayList<>();
