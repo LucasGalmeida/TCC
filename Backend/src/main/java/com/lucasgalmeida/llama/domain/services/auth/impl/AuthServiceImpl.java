@@ -8,6 +8,7 @@ import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.application.dto.auth.AuthResponseDTO;
 import com.lucasgalmeida.llama.application.dto.auth.LoginRequestDTO;
 import com.lucasgalmeida.llama.application.dto.auth.RegisterRequestDTO;
+import com.lucasgalmeida.llama.domain.services.user.UserService;
 import com.lucasgalmeida.llama.infra.security.TokenService;
 import com.lucasgalmeida.llama.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +27,13 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
-
     @Override
     public AuthResponseDTO login(LoginRequestDTO body) {
-        User user = userRepository.findByLogin(body.login()).orElseThrow(UserNotFoundException::new);
+        User user = userService.findUserByLogin(body.login()).orElseThrow(UserNotFoundException::new);
         if(passwordEncoder.matches(body.password(), user.getPassword())) {
             String token = tokenService.generateToken(user);
             log.info("Sucesseful login for user: {}", body.login());
@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponseDTO register(RegisterRequestDTO body) {
         log.info("Trying register the user: {}", body.login());
-        Optional<User> user = userRepository.findByLogin(body.login());
+        Optional<User> user = userService.findUserByLogin(body.login());
 
         if (user.isPresent()) {
             throw new UserAlreadyExistsException();
@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         newUser.setName(body.name());
         newUser.setPassword(passwordEncoder.encode(body.password()));
         newUser.setLogin(body.login());
-        userRepository.save(newUser);
+        userService.salvarUsuario(newUser);
 
         String token = tokenService.generateToken(newUser);
         log.info("New user registered: {}", body.login());

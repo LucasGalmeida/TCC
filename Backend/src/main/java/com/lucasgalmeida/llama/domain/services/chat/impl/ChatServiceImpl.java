@@ -9,10 +9,10 @@ import com.lucasgalmeida.llama.domain.exceptions.chat.ChatNotFoundException;
 import com.lucasgalmeida.llama.domain.repositories.ChatHistoryRepository;
 import com.lucasgalmeida.llama.domain.repositories.ChatRepository;
 import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
-import com.lucasgalmeida.llama.domain.repositories.VectorStoreRepository;
 import com.lucasgalmeida.llama.domain.services.auth.AuthService;
-import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import com.lucasgalmeida.llama.domain.services.chat.ChatService;
+import com.lucasgalmeida.llama.domain.services.document.DocumentService;
+import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,6 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.reader.ExtractedTextFormatter;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -46,21 +45,16 @@ public class ChatServiceImpl implements ChatService {
     private final DocumentService documentService;
     private final AuthService authService;
     private final VectorStore vectorStore;
-    private final VectorStoreRepository vectorStoreRepository;
-
+    private final VectorStoreService vectorStoreService;
+    private final ChatRepository chatRepository;
+    private final ChatHistoryRepository chatHistoryRepository;
     @PersistenceContext
     private EntityManager entityManager;
-
     // todo - prompts dinamicos?
     @Value("classpath:/prompts/prompt-generico.st")
     private Resource promptGenerico;
-
     @Value("classpath:/prompts/prompt-embedding.st")
     private Resource promptEmbedding;
-
-    private final DocumentRepository documentRepository;
-    private final ChatRepository chatRepository;
-    private final ChatHistoryRepository chatHistoryRepository;
 
     @Override
     public ChatHistory chatGenerico(String query, Integer chatId) {
@@ -89,7 +83,7 @@ public class ChatServiceImpl implements ChatService {
         try {
             List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
             List<Document> documentosSemelhantes;
-            if(fileNames.isEmpty()){
+            if (fileNames.isEmpty()) {
                 documentosSemelhantes = new ArrayList<>();
             } else {
                 FilterExpressionBuilder b = new FilterExpressionBuilder();
@@ -97,12 +91,11 @@ public class ChatServiceImpl implements ChatService {
                 for (String fileName : fileNames) {
                     if (op == null) {
                         op = b.or(b.eq("file_name", fileName), b.eq("source", fileName));
-                    }
-                    else {
+                    } else {
                         op = b.or(op, b.or(b.eq("file_name", fileName), b.eq("source", fileName)));
                     }
                 }
-                if(Objects.nonNull(op)){
+                if (Objects.nonNull(op)) {
                     documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3)
                             .withFilterExpression(op.build())
                     );
@@ -111,7 +104,7 @@ public class ChatServiceImpl implements ChatService {
                 }
             }
             return documentosSemelhantes.stream().map(Document::getContent).toList();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
@@ -121,10 +114,10 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void processDocumentById(Integer documentId) throws IOException {
         com.lucasgalmeida.llama.domain.entities.Document document = documentService.getDocumentById(documentId);
-        if(document.isProcessed()) throw new RuntimeException("Document already processed");
+        if (document.isProcessed()) throw new RuntimeException("Document already processed");
         Path fullPath = documentService.getFullPath(document);
         Resource documentFile = documentService.getDocument(fullPath);
-        if(!documentFile.exists()) throw new RuntimeException("Document not found");
+        if (!documentFile.exists()) throw new RuntimeException("Document not found");
 
         TikaDocumentReader tikaDocumentReader = new TikaDocumentReader(documentFile);
         TokenTextSplitter tokenTextSplitter = new TokenTextSplitter();
@@ -133,35 +126,36 @@ public class ChatServiceImpl implements ChatService {
         List<Document> documents = null;
         try {
             documents = tikaDocumentReader.get(); // Le o pdf
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             log.error("Ocorreu um erro ao ler o PDF");
             throw e;
         }
 
-        if(CollectionUtils.isEmpty(documents)) throw new RuntimeException("Não foi possível ler o PDF");
+        if (CollectionUtils.isEmpty(documents)) throw new RuntimeException("Não foi possível ler o PDF");
 
         List<Document> documentosProcessados = null;
 
         try {
             documentosProcessados = tokenTextSplitter.apply(documents);  //Divide em chunks
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             log.error("Ocorreu um erro ao converter o PDF em chunks");
             throw e;
         }
 
-        if(CollectionUtils.isEmpty(documentosProcessados)) throw new RuntimeException("Não foi possível processar o PDF");
+        if (CollectionUtils.isEmpty(documentosProcessados))
+            throw new RuntimeException("Não foi possível processar o PDF");
 
         vectorStore.accept(documentosProcessados);
         document.setProcessed(true);
         document.setVectorStores(findByFileName(document.getFileNameWithTimeStamp()));
-        documentRepository.save(document);
+        documentService.salvarDocumento(document);
     }
 
     @Override
     public Set<com.lucasgalmeida.llama.domain.entities.VectorStore> findByFileName(String fileName) {
-        return vectorStoreRepository.findByFileName(fileName);
+        return vectorStoreService.findByFileName(fileName);
     }
 
     @Override
@@ -180,7 +174,7 @@ public class ChatServiceImpl implements ChatService {
     public List<ChatHistory> findChatHistoryByChatId(Integer id) {
         Chat chat = chatRepository.findById(id).orElseThrow(() -> new ChatNotFoundException("Chat not found"));
         User user = authService.findAuthenticatedUser();
-        if(!user.getId().equals(chat.getUser().getId())){
+        if (!user.getId().equals(chat.getUser().getId())) {
             throw new UnauthorizedException("User not authorized to access this document");
         }
         return chatHistoryRepository.findByChat_Id(id);
