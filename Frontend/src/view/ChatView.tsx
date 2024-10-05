@@ -153,6 +153,7 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Digite sua mensagem..."
+          disabled={loading}
           onPressEnter={(e) => {
             e.preventDefault();
             handleSendMessage();
