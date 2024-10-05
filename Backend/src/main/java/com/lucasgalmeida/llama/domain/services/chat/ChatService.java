@@ -9,9 +9,8 @@ import java.util.List;
 import java.util.Set;
 
 public interface ChatService {
-    String chatGenerico(String query);
-    String chatEspecifico(String query);
-    ChatHistory chatEmbedding(String query, Integer chatId);
+    ChatHistory chatGenerico(String query, Integer chatId);
+    ChatHistory chatEmbedding(String query, Integer chatId, List<Integer> documentsIds);
     void processDocumentById(Integer id) throws IOException;
     Set<VectorStore> findByFileName(String fileName);
     Chat createNewChat(String title);

@@ -3,7 +3,7 @@ import backend from './server-config';
 const route = "/chat";
 
 class ChatService {
-    static async processDocumentById(id:any) {
+    static async processDocumentById(id:number) {
         try {
             const response = await backend.post(route + `/process/${id}`, null);
             return response.data;
@@ -33,7 +33,7 @@ class ChatService {
         }
     }
 
-    static async getChatHistoryById(id:any) {
+    static async getChatHistoryById(id:number) {
         try {
             const response = await backend.get(route + `/history/${id}`);
             return response.data;
@@ -43,9 +43,9 @@ class ChatService {
         }
     }
 
-    static async chatEmbedding(chatId:any, query: string) {
+    static async chatGenerico(chatId:number, query: string) {
         try {
-            const response = await backend.post(route + `/chat-embedding/${chatId}`, {query:query});
+            const response = await backend.post(route + `/chat-generico/${chatId}`, {query:query});
             return response.data;
         } catch (error) {
             console.error(error);
@@ -53,7 +53,17 @@ class ChatService {
         }
     }
 
-    static async deleteChatById(id:any) {
+    static async chatEmbedding(chatId:number, query: string, documentsIds: number[]) {
+        try {
+            const response = await backend.post(route + `/chat-embedding/${chatId}`, {query:query, documentsIds: documentsIds});
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    static async deleteChatById(id:number) {
         try {
             const response = await backend.delete(route + `/${id}`);
             return response.data;

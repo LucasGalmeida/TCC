@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Form, Input, Button } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
-import { FormInstance } from 'antd/es/form';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/auth.service';
 import { useAuthContext } from '../context/AuthContext';
@@ -16,6 +15,7 @@ interface RegistrationFormValues {
 const RegistrationForm: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthContext();
+  const [loading, setLoading] = useState(false);
 
   const onFinish = (values: RegistrationFormValues) => {
       const data = {
@@ -23,6 +23,7 @@ const RegistrationForm: React.FC = () => {
         login: values.login,
         password: values.password
       }
+      setLoading(true);
       AuthService.register(data)
       .then(response => {
         login();
@@ -30,6 +31,7 @@ const RegistrationForm: React.FC = () => {
         navigate('/home');
       })
       .catch(error => {
+        setLoading(false);
         console.error("Erro ao fazer login:", error.response.data);
     });
   };
@@ -113,7 +115,7 @@ const RegistrationForm: React.FC = () => {
       </Form.Item>
 
       <Form.Item>
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" htmlType="submit" loading={loading} disabled={loading}>
           Register
         </Button>
         <Button type="default" onClick={() => navigate('/')} style={{ marginLeft: '10px' }}>

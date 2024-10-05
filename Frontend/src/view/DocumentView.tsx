@@ -7,7 +7,7 @@ import { useParams } from 'react-router-dom';
 const DocumentView: React.FC = () => {
 
   const { documentId } = useParams<{ documentId: string }>();
-  const [pdfUrl, setPdfUrl] = useState<any>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if(documentId){
@@ -31,9 +31,8 @@ const DocumentView: React.FC = () => {
     pdfUrl 
     ?
     <div>
-      <h1>PDF Preview</h1>
+      <h1 style={{textAlign: 'center', marginBottom: '32px'}}>Pré visualização do documento</h1> 
       <PdfPreview pdfUrl={pdfUrl} />
-      {/* <img src={pdfUrl} /> */}
     </div>
     :
     <>
