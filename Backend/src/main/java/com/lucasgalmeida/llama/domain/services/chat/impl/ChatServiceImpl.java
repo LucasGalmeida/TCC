@@ -6,7 +6,6 @@ import com.lucasgalmeida.llama.domain.entities.ChatHistory;
 import com.lucasgalmeida.llama.domain.entities.User;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UnauthorizedException;
 import com.lucasgalmeida.llama.domain.exceptions.chat.ChatNotFoundException;
-import com.lucasgalmeida.llama.domain.exceptions.document.DocumentNotFoundException;
 import com.lucasgalmeida.llama.domain.repositories.ChatHistoryRepository;
 import com.lucasgalmeida.llama.domain.repositories.ChatRepository;
 import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
@@ -18,15 +17,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.reader.ExtractedTextFormatter;
-import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
-import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
+import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -35,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -58,9 +55,6 @@ public class ChatServiceImpl implements ChatService {
     @Value("classpath:/prompts/prompt-generico.st")
     private Resource promptGenerico;
 
-    @Value("classpath:/prompts/prompt-especifico.st")
-    private Resource promptEspecifico;
-
     @Value("classpath:/prompts/prompt-embedding.st")
     private Resource promptEmbedding;
 
@@ -69,40 +63,31 @@ public class ChatServiceImpl implements ChatService {
     private final ChatHistoryRepository chatHistoryRepository;
 
     @Override
-    public String chatGenerico(String query) {
+    public ChatHistory chatGenerico(String query, Integer chatId) {
+        Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new ChatNotFoundException("Chat not found with id: " + chatId));
+        chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.USER_REQUEST, query, chat));
         PromptTemplate promptTemplate = new PromptTemplate(promptGenerico);
         Prompt prompt = promptTemplate.create(Map.of("input", query));
         String response = chatModel.call(prompt).getResult().getOutput().getContent();
-        return response;
-    }
-
-    @Override
-    public String chatEspecifico(String query) {
-        PromptTemplate promptTemplate = new PromptTemplate(promptEspecifico);
-        Map<String, Object> promptParameters = new HashMap<>();
-        promptParameters.put("input", query);
-        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query)));
-
-        String response = chatModel.call(promptTemplate.create(promptParameters)).getResult().getOutput().getContent();
-        return response;
+        return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
     }
 
     @Override
     @Transactional
-    public ChatHistory chatEmbedding(String query, Integer chatId) {
+    public ChatHistory chatEmbedding(String query, Integer chatId, List<Integer> documentsIds) {
         Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new ChatNotFoundException("Chat not found with id: " + chatId));
         chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.USER_REQUEST, query, chat));
         PromptTemplate promptTemplate = new PromptTemplate(promptEmbedding);
         Map<String, Object> promptParameters = new HashMap<>();
         promptParameters.put("input", query);
-        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query)));
+        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query, documentsIds)));
         String response = chatModel.call(promptTemplate.create(promptParameters)).getResult().getOutput().getContent();
         return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
     }
 
-    private List<String> buscaDocumentosSemelhantes(String message) {
+    private List<String> buscaDocumentosSemelhantes(String message, List<Integer> documentsIds) {
         try {
-            List<String> fileNames = documentService.getFileNamesFromAllDocuments();
+            List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
             List<Document> documentosSemelhantes;
             if(fileNames.isEmpty()){
                 documentosSemelhantes = new ArrayList<>();
@@ -111,22 +96,25 @@ public class ChatServiceImpl implements ChatService {
                 FilterExpressionBuilder.Op op = null;
                 for (String fileName : fileNames) {
                     if (op == null) {
-                        op = b.eq("file_name", fileName);
+                        op = b.or(b.eq("file_name", fileName), b.eq("source", fileName));
                     }
                     else {
-                        op = b.or(op, b.eq("file_name", fileName));
+                        op = b.or(op, b.or(b.eq("file_name", fileName), b.eq("source", fileName)));
                     }
                 }
-                documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3)
-                        .withFilterExpression(op.build())
-                );
+                if(Objects.nonNull(op)){
+                    documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3)
+                            .withFilterExpression(op.build())
+                    );
+                } else {
+                    documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3));
+                }
             }
             return documentosSemelhantes.stream().map(Document::getContent).toList();
         } catch (Exception e){
             e.printStackTrace();
             throw e;
         }
-
     }
 
     @Transactional
@@ -138,17 +126,32 @@ public class ChatServiceImpl implements ChatService {
         Resource documentFile = documentService.getDocument(fullPath);
         if(!documentFile.exists()) throw new RuntimeException("Document not found");
 
-        var config = PdfDocumentReaderConfig.builder()
-                .withPageExtractedTextFormatter(new ExtractedTextFormatter.Builder().withNumberOfBottomTextLinesToDelete(0)
-                        .withNumberOfTopPagesToSkipBeforeDelete(0)
-                        .build())
-                .withPagesPerDocument(1)
-                .build();
-        var pdfReader = new PagePdfDocumentReader(documentFile, config);
-        var textSplitter = new TokenTextSplitter();
+        TikaDocumentReader tikaDocumentReader = new TikaDocumentReader(documentFile);
+        TokenTextSplitter tokenTextSplitter = new TokenTextSplitter();
 
-        List<Document> documents = pdfReader.get(); // Le o pdf
-        List<Document> documentosProcessados = textSplitter.apply(documents); //Divide em chunks
+
+        List<Document> documents = null;
+        try {
+            documents = tikaDocumentReader.get(); // Le o pdf
+        } catch (Exception e){
+            e.printStackTrace();
+            log.error("Ocorreu um erro ao ler o PDF");
+            throw e;
+        }
+
+        if(CollectionUtils.isEmpty(documents)) throw new RuntimeException("Não foi possível ler o PDF");
+
+        List<Document> documentosProcessados = null;
+
+        try {
+            documentosProcessados = tokenTextSplitter.apply(documents);  //Divide em chunks
+        } catch (Exception e){
+            e.printStackTrace();
+            log.error("Ocorreu um erro ao converter o PDF em chunks");
+            throw e;
+        }
+
+        if(CollectionUtils.isEmpty(documentosProcessados)) throw new RuntimeException("Não foi possível processar o PDF");
 
         vectorStore.accept(documentosProcessados);
         document.setProcessed(true);

@@ -47,7 +47,7 @@ class DocumentService {
         }
     }
 
-    static async deleteDocumentById(id:string) {
+    static async deleteDocumentById(id:number) {
         try {
             const response = await backend.delete(route + `/${id}`);
             return response.data;
