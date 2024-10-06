@@ -8,14 +8,12 @@ import com.lucasgalmeida.llama.domain.exceptions.document.DocumentNotFoundExcept
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentStorageException;
 import com.lucasgalmeida.llama.domain.exceptions.document.DocumentTypeException;
 import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
-import com.lucasgalmeida.llama.domain.repositories.VectorStoreRepository;
 import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -27,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,22 +40,17 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class DocumentServiceImpl implements DocumentService {
-    private final VectorStoreService vectorStoreService;
-
-    @Value("${filePath}")
-    private String path;
-
-    @Value("${spring.servlet.multipart.max-file-size}")
-    private String maxDocumentSize;
-
-    @Value("${spring.servlet.multipart.max-request-size}")
-    private String maxRequestSize;
-
     private static final String[] SUPPORTED_CONTENT_TYPES = {"application/pdf"};
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-
+    private final VectorStoreService vectorStoreService;
     private final AuthService authService;
     private final DocumentRepository repository;
+    @Value("${filePath}")
+    private String path;
+    @Value("${spring.servlet.multipart.max-file-size}")
+    private String maxDocumentSize;
+    @Value("${spring.servlet.multipart.max-request-size}")
+    private String maxRequestSize;
 
     private String saveDocument(MultipartFile file, Integer userId, String dateUpload) throws IOException {
         validateDocumentSize(file.getSize());
@@ -91,11 +83,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Path getFullPath(Document document){
+    public Path getFullPath(Document document) {
         return Paths.get(path, document.getUser().getId().toString(), getFinalFileName(document));
     }
 
-    public String getFinalFileName(Document document){
+    public String getFinalFileName(Document document) {
         String fileNameWithoutExtension = removeExtension(document.getName());
         String extension = getExtension(document.getName());
         return fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + "." + extension;
@@ -104,20 +96,20 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public List<Document> getMyDocuments() {
         User user = authService.findAuthenticatedUser();
-        if(Objects.nonNull(user)){
+        if (Objects.nonNull(user)) {
             return repository.findByUser_Id(user.getId());
         }
         return new ArrayList<>();
     }
 
     @Override
-    public List<String> getFileNamesFromAllDocuments(){
+    public List<String> getFileNamesFromAllDocuments() {
         List<Document> myDocuments = getMyDocuments();
         return myDocuments.stream().map(this::getFinalFileName).toList();
     }
 
     @Override
-    public List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds){
+    public List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds) {
         List<Document> myDocuments = repository.findAllById(documentsIds);
         return myDocuments.stream().map(this::getFinalFileName).toList();
     }
@@ -207,7 +199,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional
     public Document saveDocumentByUser(MultipartFile file) throws FileAlreadyExistsException {
         Document document = new Document();
-        if(repository.existsByName(file.getOriginalFilename())){
+        if (repository.existsByName(file.getOriginalFilename())) {
             throw new FileAlreadyExistsException(file.getOriginalFilename());
         }
         document.setName(file.getOriginalFilename());
@@ -218,7 +210,7 @@ public class DocumentServiceImpl implements DocumentService {
         document = repository.save(document);
         try {
             saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER));
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new DocumentStorageException("Failed to store file: " + file.getOriginalFilename(), e);
         }
         return document;
@@ -228,24 +220,24 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional
     public List<Document> saveDocumentsByUser(MultipartFile[] files) throws FileAlreadyExistsException {
         List<Document> retorno = new ArrayList<>();
-        for(MultipartFile file: files){
+        for (MultipartFile file : files) {
             retorno.add(saveDocumentByUser(file));
         }
         return retorno;
     }
 
     @Override
-    public Document getDocumentById(Integer id){
+    public Document getDocumentById(Integer id) {
         Document document = repository.findById(id).orElseThrow(() -> new DocumentNotFoundException("Document not found"));
         User user = authService.findAuthenticatedUser();
-        if(!user.getId().equals(document.getUser().getId())){
+        if (!user.getId().equals(document.getUser().getId())) {
             throw new UnauthorizedException("User not authorized to access this document");
         }
         return document;
     }
 
     @Override
-    public Resource getResourceById(Integer id){
+    public Resource getResourceById(Integer id) {
         Document document = getDocumentById(id);
         Path fullPath = getFullPath(document);
         return new FileSystemResource(fullPath.toString());
@@ -255,7 +247,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional
     public void deleteDocumentById(Integer id) {
         Document document = getDocumentById(id);
-        if(document.isProcessed()){
+        if (document.isProcessed()) {
             List<UUID> vectorStoreIds = document.getVectorStores().stream().map(VectorStore::getId).toList();
             vectorStoreService.deleteByIdList(vectorStoreIds);
             document.getVectorStores().clear();

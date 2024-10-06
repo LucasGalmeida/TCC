@@ -72,7 +72,7 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
         handleFocusTextArea();
       })
       .catch(error => {
-        console.error("Erro ao enviar request para o backend: ", error.response.data);
+        message.error("Erro ao enviar request para o backend: " + error.response.data);
         deletarUltimaMensagem();
       })
       .finally(() => {
