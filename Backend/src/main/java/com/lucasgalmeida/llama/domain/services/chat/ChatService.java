@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Set;
 
 public interface ChatService {
-    ChatHistory chatGenerico(String query, Integer chatId);
-    ChatHistory chatEmbedding(String query, Integer chatId, List<Integer> documentsIds);
+    ChatHistory chatIA(String query, Integer chatId, List<Integer> documentsIds);
     void processDocumentById(Integer id) throws IOException;
     Set<VectorStore> findByFileName(String fileName);
     Chat createNewChat(String title);
     List<Chat> findAllChatsByUser();
     List<ChatHistory> findChatHistoryByChatId(Integer id);
     void deleteChatById(Integer id);
+    void deleteLastChatHistoryByChatId(Integer id);
 }
