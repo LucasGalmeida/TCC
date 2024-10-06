@@ -1,4 +1,4 @@
-import backend from './server-config';
+import backend from '../config/server-config';
 
 const route = "/chat";
 
@@ -43,19 +43,9 @@ class ChatService {
         }
     }
 
-    static async chatGenerico(chatId:number, query: string) {
+    static async chatIa(chatId:number, query: string, documentsIds: number[]) {
         try {
-            const response = await backend.post(route + `/chat-generico/${chatId}`, {query:query});
-            return response.data;
-        } catch (error) {
-            console.error(error);
-            throw error;
-        }
-    }
-
-    static async chatEmbedding(chatId:number, query: string, documentsIds: number[]) {
-        try {
-            const response = await backend.post(route + `/chat-embedding/${chatId}`, {query:query, documentsIds: documentsIds});
+            const response = await backend.post(route + `/chat-ia/${chatId}`, {query:query, documentsIds: documentsIds});
             return response.data;
         } catch (error) {
             console.error(error);
@@ -72,6 +62,27 @@ class ChatService {
             throw error;
         }
     }
+
+    static async deleteLastChatHistoryByChatId(id:number) {
+        try {
+            const response = await backend.delete(route + `/last-chat-history/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    static async updateTitle(id: number, title: string) {
+        try {
+          const response = await backend.put(`${route}/change-title/${id}?title=${encodeURIComponent(title)}`);
+          return response.data;
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
+    }
+      
 }
 
 export default ChatService;

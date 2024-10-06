@@ -27,4 +27,5 @@ public interface DocumentService {
     List<Document> getMyDocuments();
     List<String> getFileNamesFromAllDocuments();
     List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds);
+    void salvarDocumento(Document document);
 }

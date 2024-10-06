@@ -22,6 +22,16 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
   const [selectedDocuments, setSelectedDocuments] = useState<Set<number>>(new Set());
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
+  const textAreaRef:any = useRef(null);
+
+  const handleFocusTextArea = () => {
+    setTimeout(() => {
+      if (textAreaRef.current) {
+        textAreaRef.current.focus();
+      }
+    }, 350);
+  };
+
   useEffect(() => {
     if (chatId) {
       buscarHistoricoPorChatId();
@@ -45,37 +55,11 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
   }
 
   function handleSendMessage() {
-    if (newMessage.trim() !== '') {
+    if ((selectedDocuments.size > 0 && newMessage.trim() !== '') || newMessage.trim() !== '') {
+      const documentIds = selectedDocuments ? Array.from(selectedDocuments) : [];
       setIsResponding(true);
       setLoading(true);
-      ChatService.chatGenerico(Number(chatId), newMessage)
-        .then(response => {
-          const userMessage: ChatHistory = {
-            type: ChatHistoryEnum.USER_REQUEST,
-            date: new Date().toISOString(),
-            message: newMessage,
-          };
-    
-          setChatHistory([...chatHistory, userMessage]);
-          setNewMessage('');
-          setChatHistory(prevHistory => [...prevHistory, response]);
-        })
-        .catch(error => {
-          console.error("Erro ao enviar request para o backend: ", error.response.data);
-        })
-        .finally(() => {
-          setIsResponding(false);
-          setLoading(false);
-        });
-    }
-  }
-
-  function handleSendDocuments() {
-    if (selectedDocuments.size > 0 && newMessage.trim() !== '') {
-      const documentIds = Array.from(selectedDocuments);
-      setIsResponding(true);
-      setLoading(true);
-      ChatService.chatEmbedding(Number(chatId), newMessage, documentIds)
+      ChatService.chatIa(Number(chatId), newMessage, documentIds)
       .then(response => {
         const userMessage: ChatHistory = {
           type: ChatHistoryEnum.USER_REQUEST,
@@ -85,9 +69,11 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
         setChatHistory([...chatHistory, userMessage]);
         setNewMessage('');
         setChatHistory(prevHistory => [...prevHistory, response]);
+        handleFocusTextArea();
       })
       .catch(error => {
         console.error("Erro ao enviar request para o backend: ", error.response.data);
+        deletarUltimaMensagem();
       })
       .finally(() => {
         setIsResponding(false);
@@ -96,6 +82,10 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
         setShowDocumentModal(false);
       });
     }
+  }
+
+  const deletarUltimaMensagem = () => {
+    ChatService.deleteLastChatHistoryByChatId(Number(chatId)).then()
   }
 
   const handleDocumentSelection = (docId: number) => {
@@ -158,6 +148,7 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
             e.preventDefault();
             handleSendMessage();
           }}
+          ref={textAreaRef}
         />
         <Button type="primary" onClick={handleSendMessage} style={{ marginTop: '10px', float: 'right' }} loading={loading} disabled={loading || newMessage.trim() == ''}>
           Enviar
@@ -170,7 +161,7 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
       <Modal
         title="Selecionar Documentos"
         open={showDocumentModal}
-        onOk={handleSendDocuments}
+        onOk={handleSendMessage}
         onCancel={() => setShowDocumentModal(false)}
         okText="Enviar"
         cancelText="Cancelar"

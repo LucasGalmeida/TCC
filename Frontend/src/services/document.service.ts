@@ -1,4 +1,4 @@
-import backend from './server-config';
+import backend from '../config/server-config';
 
 const route = "/document";
 

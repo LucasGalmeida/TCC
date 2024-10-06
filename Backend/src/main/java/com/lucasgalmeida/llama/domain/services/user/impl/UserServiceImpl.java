@@ -8,15 +8,27 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository repository;
+
     @Override
     public List<User> findAll() {
         log.info("Searching all users");
         return repository.findAll();
+    }
+
+    @Override
+    public Optional<User> findUserByLogin(String login) {
+        return repository.findByLogin(login);
+    }
+
+    @Override
+    public User salvarUsuario(User user) {
+        return repository.save(user);
     }
 }

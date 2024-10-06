@@ -11,6 +11,7 @@ import com.lucasgalmeida.llama.domain.repositories.DocumentRepository;
 import com.lucasgalmeida.llama.domain.repositories.VectorStoreRepository;
 import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.domain.services.document.DocumentService;
+import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +43,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class DocumentServiceImpl implements DocumentService {
-    private final VectorStoreRepository vectorStoreRepository;
+    private final VectorStoreService vectorStoreService;
 
     @Value("${filePath}")
     private String path;
@@ -119,6 +120,11 @@ public class DocumentServiceImpl implements DocumentService {
     public List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds){
         List<Document> myDocuments = repository.findAllById(documentsIds);
         return myDocuments.stream().map(this::getFinalFileName).toList();
+    }
+
+    @Override
+    public void salvarDocumento(Document document) {
+        repository.save(document);
     }
 
     public void deleteDocument(Path fullPath) {
@@ -251,7 +257,7 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = getDocumentById(id);
         if(document.isProcessed()){
             List<UUID> vectorStoreIds = document.getVectorStores().stream().map(VectorStore::getId).toList();
-            vectorStoreRepository.deleteAllById(vectorStoreIds);
+            vectorStoreService.deleteByIdList(vectorStoreIds);
             document.getVectorStores().clear();
         }
         repository.deleteById(id);

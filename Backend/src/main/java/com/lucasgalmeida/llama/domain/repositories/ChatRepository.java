@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ChatRepository extends JpaRepository<Chat, Integer> {
     List<Chat> findByUser_Id(Integer id);
+    boolean existsByUser_IdAndTitleIgnoreCase(Integer id, String title);
 }
