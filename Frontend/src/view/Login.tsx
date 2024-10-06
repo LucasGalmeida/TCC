@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Card, Row, Col } from "antd";
+import { Form, Input, Button, Card, Row, Col, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../services/auth.service";
 import { useAuthContext } from "../context/AuthContext";
@@ -33,7 +33,7 @@ const Login: React.FC = () => {
       })
       .catch((error) => {
         setLoading(false);
-        console.error("Erro ao fazer login:", error.response.data);
+        message.error("Erro ao fazer login:" + error.response.data);
       });
   };
 

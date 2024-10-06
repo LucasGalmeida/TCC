@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ChatService from '../services/chat.service';
 import TextArea from 'antd/es/input/TextArea';
-import { Button, Checkbox, Modal, Spin } from 'antd';
+import { Button, Checkbox, Modal, Spin, message } from 'antd';
 import { ChatHistoryEnum } from '../types/ChatHistoryEnum';
 import { ChatHistory } from '../types/ChatHistory';
 import { Key } from 'antd/es/table/interface';
@@ -50,7 +50,7 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
         setChatHistory(response);
       })
       .catch(error => {
-        console.error("Erro ao buscar histórico por chat id: ", error.response.data);
+        message.error("Erro ao buscar histórico por chat id: " + error.response.data);
       });
   }
 

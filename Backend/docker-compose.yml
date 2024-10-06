@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  spring-ai-llama:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pgvector:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - API_SECURITY_TOKEN_SECRET=my-secret-key
+      - API_SECURITY_TOKEN_EXPIRATION_HOURS=2
+    volumes:
+      - ./e:/Ollama
+
+  pgvector:
+    image: pgvector/pgvector:pg16
+    ports:
+      - '5432'
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    labels:
+      - org.springframework.boot.service-connection=postgres
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+
+volumes:
+  pgvector_data:
+  pgdata:
