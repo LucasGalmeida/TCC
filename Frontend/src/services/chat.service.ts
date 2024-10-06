@@ -72,6 +72,17 @@ class ChatService {
             throw error;
         }
     }
+
+    static async updateTitle(id: number, title: string) {
+        try {
+          const response = await backend.put(`${route}/change-title/${id}?title=${encodeURIComponent(title)}`);
+          return response.data;
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
+    }
+      
 }
 
 export default ChatService;

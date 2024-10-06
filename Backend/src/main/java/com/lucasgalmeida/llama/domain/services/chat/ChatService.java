@@ -13,8 +13,10 @@ public interface ChatService {
     void processDocumentById(Integer id) throws IOException;
     Set<VectorStore> findByFileName(String fileName);
     Chat createNewChat(String title);
+    Chat changeTitle(Integer id, String title);
     List<Chat> findAllChatsByUser();
     List<ChatHistory> findChatHistoryByChatId(Integer id);
     void deleteChatById(Integer id);
     void deleteLastChatHistoryByChatId(Integer id);
+    Chat buscarPorId(Integer id);
 }

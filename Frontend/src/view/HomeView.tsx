@@ -10,7 +10,7 @@ const HomeView = () => {
   return (
     <div>
       <section style={{ padding: '100px 50px', backgroundColor: '#f0f2f5', textAlign: 'center' }}>
-        <Title level={1}>Bem-vindo ao ChatAI</Title>
+        <Title level={1}>Bem-vindo ao ChatIA</Title>
         <Paragraph style={{ fontSize: '18px', maxWidth: '800px', margin: '0 auto' }}>
           Seu assistente de IA está aqui para ajudar você a analisar e aprender com seus documentos.
         </Paragraph>

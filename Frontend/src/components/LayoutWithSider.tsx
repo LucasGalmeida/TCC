@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm, Input, Tooltip } from 'antd';
-import { DeleteOutlined,  UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
+import { DeleteOutlined,  UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined, EditOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { MenuProps } from 'antd';
@@ -24,6 +24,39 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [arquivosASeremSalvos, setArquivosASeremSalvos] = useState<any[]>([]);
   const [modalType, setModalType] = useState(1);
   const inputRef:any = useRef(null);
+
+  const [isEditing, setIsEditing] = useState(false); // Estado para controle do modal de edição
+  const [editingChat, setEditingChat] = useState<any>(null); // Estado para guardar o chat que está sendo editado
+  const [newTitle, setNewTitle] = useState(''); // Estado para o novo título do chat
+
+  // Função para abrir o modal de edição
+  const openEditModal = (chat: any) => {
+    setEditingChat(chat);  // Guardar o chat que está sendo editado
+    setNewTitle(chat.title); // Preencher o input com o nome atual
+    setIsEditing(true); // Mostrar o modal
+  };
+
+  // Função para confirmar a edição do chat
+const handleEdit = () => {
+  if (editingChat) {
+    ChatService.updateTitle(editingChat.id, newTitle)
+      .then(_ => {
+        message.success('Título alterado com sucesso!');
+        const updatedChats = chats.map((chat: Chat) => {
+          if (chat.id === editingChat.id) {
+            return { ...chat, title: newTitle };
+          }
+          return chat;
+        });
+        setChats(updatedChats);
+      })
+      .catch(error => {
+        message.error("Erro ao editar título: " + error.response?.data || error.message);
+      })
+      .finally(() => setIsEditing(false));
+  }
+};
+
   
   useEffect(() => {
     buscarMeusDocumentos();
@@ -36,7 +69,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       setDocuments(response);
     })
     .catch(error => {
-      console.error("Erro ao buscar documentos: ", error.response.data);
+      message.error("Erro ao buscar documentos: " + error.response.data);
     });
   }
 
@@ -46,7 +79,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       setChats(response);
     })
     .catch(error => {
-      console.error("Erro ao buscar chats: ", error.response.data);
+      message.error("Erro ao buscar chats: " + error.response.data);
     });
   }
 
@@ -61,7 +94,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         setDocuments(updatedDocuments);
       })
       .catch(error => {
-        message.error(error.response.data);
+        message.error("Erro ao processar documento: " + error.response.data);
       })
       .finally(() => 
         setLoading(false)
@@ -78,7 +111,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         if(Number(documentId) == docId) navigate("/home");
       })
       .catch(error => {
-        message.error(error.response.data);
+        message.error("Erro ao excluir documento: " + error.response.data);
       })
       .finally(() => 
         setLoading(false)
@@ -91,8 +124,6 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       .then(_ => {
         message.success('Chat excluído com sucesso!');
         setChats(chats.filter((chat: Chat) => chat.id !== chatRemoverId));
-        // const { chatId } = useParams<{ chatId: string }>();
-        // if(chatId == chatRemoverId) navigate("/home");
         navigate("/home");
       })
       .catch(_ => {
@@ -130,7 +161,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         setArquivosASeremSalvos([]);
       })
       .catch(error => {
-        console.error("Erro ao salvar documentos: ", error.response.data);
+        message.error("Erro ao salvar documentos: " + error.response.data);
       })
       .finally(() => 
         setLoading(false)
@@ -145,8 +176,8 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         navigate('/chat/'+response.id);
         setChatTitle("");
       })
-      .catch(_ => {
-        message.error('Erro ao criar chat.');
+      .catch(err => {
+        message.error("Erro ao criar chat: " + err.response.data);
       })
       .finally(() => 
         setLoading(false)
@@ -231,7 +262,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
           </Tooltip>
           ),
           key: doc.id,
-          style: {whiteSpace: 'normal', height: 'auto', border: `1px solid ${doc.processed ? 'green' : 'red'}`, paddingLeft: '0px', paddingRight: '0px', backgroundColor: '#efefef'},
+          style: {whiteSpace: 'normal', height: 'auto', border: `1px solid ${doc.processed ? 'green' : 'red'}`, paddingLeft: '0px', paddingRight: '0px', backgroundColor: '#e6f3ff'},
           onClick: () => navigate(`/document/${doc.id}`)
         })),
       ],
@@ -259,19 +290,28 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
           label: (
             <span style={{ display: 'flex', justifyContent: 'space-around', color: 'black' }}>
               {chat.title}
-              <Popconfirm
-                title="Excluir chat"
-                description="Tem certeza que você deseja excluir este chat?"
-                onConfirm={() => excluirChat(chat.id)} 
-                okText="EXCLUIR"
-                cancelText="CANCELAR"
-              >
-                <Button type='text' icon={<DeleteOutlined />} style={{ marginLeft: '8px', marginTop: '4px' }} loading={loading} disabled={loading}></Button>
-              </Popconfirm>
+              <div>
+                <Button 
+                  type="text" 
+                  icon={<EditOutlined />} 
+                  style={{ marginLeft: '8px', marginTop: '4px' }} 
+                  onClick={() => openEditModal(chat)}
+                  disabled={loading}
+                />
+                <Popconfirm
+                  title="Excluir chat"
+                  description="Tem certeza que você deseja excluir este chat?"
+                  onConfirm={() => excluirChat(chat.id)} 
+                  okText="EXCLUIR"
+                  cancelText="CANCELAR"
+                >
+                  <Button type='text' icon={<DeleteOutlined />} style={{marginTop: '4px' }} loading={loading} disabled={loading}></Button>
+                </Popconfirm>
+              </div>
             </span>
           ),
           key: chat.id,
-          style: {whiteSpace: 'normal', height: 'auto', border: `1px solid white`, paddingLeft: '0px', paddingRight: '0px', backgroundColor: '#efefef'},
+          style: {whiteSpace: 'normal', height: 'auto', border: `1px solid white`, paddingLeft: '0px', paddingRight: '0px', backgroundColor: '#e6f3ff'},
           onClick: () => navigate(`/chat/${chat.id}`)
         })),
       ],
@@ -280,6 +320,24 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   return (
     <Layout>
+      <Modal
+        title="Editar nome do chat"
+        visible={isEditing}
+        onOk={handleEdit}
+        onCancel={() => setIsEditing(false)}
+        okText="Salvar"
+        cancelText="Cancelar"
+      >
+        <Input 
+          value={newTitle} 
+          onChange={(e) => setNewTitle(e.target.value)} 
+          placeholder="Novo nome do chat"
+          onPressEnter={(e) => {
+            e.preventDefault();
+            handleEdit();
+          }}
+        />
+      </Modal>
       <Sider width={250} trigger={null} collapsible collapsed={collapsed}>
         <div className="demo-logo-vertical">
           <Menu
@@ -298,7 +356,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
               style={{ fontSize: '16px', width: 64, height: 64, color: "white" }}
             />
             <Link to="/home" style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', marginLeft: '16px' }}>
-              Home
+              Chat IA
             </Link>
           </div>
           <Popconfirm
@@ -328,7 +386,7 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
             React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<any>, { documents }) : child
           )}
         </Content>
-        <Footer style={{ textAlign: 'center' }}>ChatAI ©2024</Footer>
+        <Footer style={{ textAlign: 'center' }}>ChatIA ©2024</Footer>
       </Layout>
 
 

@@ -41,6 +41,11 @@ public class ChatController {
         return ResponseEntity.ok(chatService.createNewChat(title));
     }
 
+    @PutMapping("/change-title/{id}")
+    public ResponseEntity<Chat> changeTitle(@PathVariable Integer id, @RequestParam String title) {
+        return ResponseEntity.ok(chatService.changeTitle(id, title));
+    }
+
     @GetMapping
     public ResponseEntity<List<Chat>> myChats() {
         return ResponseEntity.ok(chatService.findAllChatsByUser());

@@ -5,6 +5,7 @@ import com.lucasgalmeida.llama.domain.entities.Chat;
 import com.lucasgalmeida.llama.domain.entities.ChatHistory;
 import com.lucasgalmeida.llama.domain.entities.User;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UnauthorizedException;
+import com.lucasgalmeida.llama.domain.exceptions.chat.ChatAlreadyExistsException;
 import com.lucasgalmeida.llama.domain.exceptions.chat.ChatNotFoundException;
 import com.lucasgalmeida.llama.domain.repositories.ChatHistoryRepository;
 import com.lucasgalmeida.llama.domain.repositories.ChatRepository;
@@ -192,7 +193,21 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public Chat createNewChat(String title) {
         User user = authService.findAuthenticatedUser();
+        if(chatRepository.existsByUser_IdAndTitleIgnoreCase(user.getId(), title)){
+            throw new ChatAlreadyExistsException("Já existe um chat com esse nome!");
+        }
         return chatRepository.save(new Chat(title, user));
+    }
+
+    @Override
+    public Chat changeTitle(Integer id, String title) {
+        User user = authService.findAuthenticatedUser();
+        if(chatRepository.existsByUser_IdAndTitleIgnoreCase(user.getId(), title)){
+            throw new ChatAlreadyExistsException("Já existe um chat com esse nome!");
+        }
+        Chat chat = buscarPorId(id);
+        chat.setTitle(title);
+        return chatRepository.save(chat);
     }
 
     @Override
@@ -203,7 +218,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public List<ChatHistory> findChatHistoryByChatId(Integer id) {
-        Chat chat = chatRepository.findById(id).orElseThrow(() -> new ChatNotFoundException("Chat not found"));
+        Chat chat = buscarPorId(id);
         User user = authService.findAuthenticatedUser();
         if (!user.getId().equals(chat.getUser().getId())) {
             throw new UnauthorizedException("User not authorized to access this document");
@@ -216,14 +231,19 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public void deleteChatById(Integer id) {
-        Chat chat = chatRepository.findById(id).orElseThrow(() -> new ChatNotFoundException("Chat not found"));
+        Chat chat = buscarPorId(id);
         chatRepository.delete(chat);
     }
 
     @Override
     @Transactional
     public void deleteLastChatHistoryByChatId(Integer id) {
-        Chat chat = chatRepository.findById(id).orElseThrow(() -> new ChatNotFoundException("Chat not found"));
+
         chatHistoryRepository.deleteLastChatHistoryByChatId(id);
+    }
+
+    @Override
+    public Chat buscarPorId(Integer id) {
+        return chatRepository.findById(id).orElseThrow(() -> new ChatNotFoundException("Chat não encontrado"));
     }
 }
