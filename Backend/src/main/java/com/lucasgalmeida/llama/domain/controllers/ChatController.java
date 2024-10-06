@@ -21,7 +21,7 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping("/chat-ia/{chatId}")
-    public ResponseEntity<ChatHistory> chatEmbedding(@RequestBody RequestDTO request, @PathVariable Integer chatId) {
+    public ResponseEntity<ChatHistory> chatIA(@RequestBody RequestDTO request, @PathVariable Integer chatId) {
         return ResponseEntity.ok(chatService.chatIA(request.query(), chatId, request.documentsIds()));
     }
 

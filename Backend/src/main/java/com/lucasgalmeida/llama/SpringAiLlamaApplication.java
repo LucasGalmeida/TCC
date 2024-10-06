@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ImportRuntimeHints;
 
 @ImportRuntimeHints(HintsConfig.class)
 @SpringBootApplication
-@OpenAPIDefinition(info = @Info(title = "Ollama Spring AI", version = "1", description = "RAG API using Ollama with llama 3.1 and pgVector"))
+@OpenAPIDefinition(info = @Info(title = "Ollama Spring AI", version = "1", description = "RAG API using Ollama with llama 3.2 and pgVector"))
 public class SpringAiLlamaApplication {
 
 	public static void main(String[] args) {

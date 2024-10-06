@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Layout, Menu, Button, theme, Modal, Upload, message, Popconfirm, Input, Tooltip } from 'antd';
 import { DeleteOutlined,  UploadOutlined, PhoneOutlined, FileOutlined, PlusOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthContext } from '../context/AuthContext';
@@ -20,7 +20,11 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [documents, setDocuments] = useState<Document[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [chatTitle, setChatTitle] = useState<string>('');
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [arquivosASeremSalvos, setArquivosASeremSalvos] = useState<any[]>([]);
+  const [modalType, setModalType] = useState(1);
+  const inputRef:any = useRef(null);
+  
   useEffect(() => {
     buscarMeusDocumentos();
     buscarMeusChats();
@@ -99,12 +103,14 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       )
   };
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [arquivosASeremSalvos, setArquivosASeremSalvos] = useState<any[]>([]);
-  const [modalType, setModalType] = useState(1);
   const showModal = (tipo:number) => {
     setModalType(tipo);
     setIsModalVisible(true)
+    setTimeout(() => {
+      if(tipo == 2 && inputRef.current){
+        inputRef.current.focus();
+      }
+    }, 350)
   }
 
   const handleOk = (tipo:number) => {
@@ -136,6 +142,8 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         message.success('Chat criado com sucesso!');
         const updatedChats = [...chats, response]
         setChats(updatedChats);
+        navigate('/chat/'+response.id);
+        setChatTitle("");
       })
       .catch(_ => {
         message.error('Erro ao criar chat.');
@@ -351,6 +359,11 @@ const LayoutWithSider: React.FC<{ children: React.ReactNode }> = ({ children }) 
             maxLength={50}
             value={chatTitle}
             onChange={(e) => setChatTitle(e.target.value)}
+            onPressEnter={(e) => {
+              e.preventDefault();
+              handleOk(modalType);
+            }}
+            ref={inputRef}
             />
         </>
         }

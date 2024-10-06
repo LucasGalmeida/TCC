@@ -12,6 +12,7 @@ import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.domain.services.chat.ChatService;
 import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
@@ -31,11 +34,14 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.ai.chat.messages.Message;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -48,7 +54,7 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 @Service
 public class ChatServiceImpl implements ChatService {
 
-    private final ChatClient chatClient;
+    private ChatClient chatClient;
     private final DocumentService documentService;
     private final AuthService authService;
     private final VectorStore vectorStore;
@@ -64,6 +70,9 @@ public class ChatServiceImpl implements ChatService {
     public ChatServiceImpl(ChatClient.Builder builder, DocumentService documentService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = builder
                 .defaultSystem("Você é uma IA séria que consegue interagir com o usuário de maneira clara e objetiva. Se solicitado, forneça exemplos. NÃO consulte os documentos disponibilizados por contra própria. Você deve consultar a documentação APENAS se solicitado.")
+                .defaultAdvisors(
+                    new MessageChatMemoryAdvisor(new InMemoryChatMemory())
+                )
                 .build();
         this.documentService = documentService;
         this.authService = authService;
@@ -71,6 +80,27 @@ public class ChatServiceImpl implements ChatService {
         this.vectorStoreService = vectorStoreService;
         this.chatRepository = chatRepository;
         this.chatHistoryRepository = chatHistoryRepository;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void preencherChatHistory() {
+        List<Chat> chats = chatRepository.findAll();
+        Map<String, List<Message>> memoria = new HashMap<>();
+        chats.forEach(chat -> {
+            List<Message> messageList = chatHistoryRepository.findByChat_IdOrderByDateAsc(chat.getId()).stream()
+                    .map(mensagem -> {
+                        ChatHistoryEnum messageType = mensagem.getType();
+                        Message message =
+                                messageType.equals(ChatHistoryEnum.USER_REQUEST) ?
+                                        new UserMessage(mensagem.getMessage()) :
+                                        new AssistantMessage(mensagem.getMessage());
+                        return message;
+                    }).toList();
+            memoria.put(chat.getId().toString(), messageList);
+        });
+        InMemoryChatMemory memoriaSalva = new InMemoryChatMemory();
+        memoria.forEach(memoriaSalva::add);
+        chatClient = chatClient.mutate().defaultAdvisors(new MessageChatMemoryAdvisor(memoriaSalva)).build();
     }
 
     @Override
@@ -81,15 +111,11 @@ public class ChatServiceImpl implements ChatService {
 
             List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
             String response = "";
-            if(StringUtils.isEmpty(fileNames)){
+            if(CollectionUtils.isEmpty(fileNames)){
                 response = chatClient
-                        .mutate().defaultAdvisors(
-                                new MessageChatMemoryAdvisor(new InMemoryChatMemory())
-                        ).build()
                         .prompt().user(query)
                         .advisors((a -> a.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         )).call().content();
-
             } else {
                 FilterExpressionBuilder b = new FilterExpressionBuilder();
                 FilterExpressionBuilder.Op op = null;
@@ -101,63 +127,17 @@ public class ChatServiceImpl implements ChatService {
                     }
                 }
                 response = chatClient
-                        .mutate().defaultAdvisors(
-                                new MessageChatMemoryAdvisor(new InMemoryChatMemory()),
-                                new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build()))
-                        ).build()
                         .prompt().user(query)
-                        .advisors((a -> a
+                        .advisors(a -> a
                                 .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        )).call().content();
+                        )
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
+                        .call().content();
             }
             return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
         } catch (Exception e){
             e.printStackTrace();
             throw new RuntimeException("Erro ao se comunidar com a LLM");
-        }
-    }
-
-//    @Override
-//    @Transactional
-//    public ChatHistory chatEmbedding(String query, Integer chatId, List<Integer> documentsIds) {
-
-
-//        PromptTemplate promptTemplate = new PromptTemplate(promptEmbedding);
-//        Map<String, Object> promptParameters = new HashMap<>();
-//        promptParameters.put("input", query);
-//        promptParameters.put("documents", String.join("\n", buscaDocumentosSemelhantes(query, documentsIds)));
-//        String response = chatModel.call(promptTemplate.create(promptParameters)).getResult().getOutput().getContent();
-//        return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
-//    }
-
-    private List<String> buscaDocumentosSemelhantes(String message, List<Integer> documentsIds) {
-        try {
-            List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
-            List<Document> documentosSemelhantes;
-            if (fileNames.isEmpty()) {
-                documentosSemelhantes = new ArrayList<>();
-            } else {
-                FilterExpressionBuilder b = new FilterExpressionBuilder();
-                FilterExpressionBuilder.Op op = null;
-                for (String fileName : fileNames) {
-                    if (op == null) {
-                        op = b.or(b.eq("file_name", fileName), b.eq("source", fileName));
-                    } else {
-                        op = b.or(op, b.or(b.eq("file_name", fileName), b.eq("source", fileName)));
-                    }
-                }
-                if (Objects.nonNull(op)) {
-                    documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3)
-                            .withFilterExpression(op.build())
-                    );
-                } else {
-                    documentosSemelhantes = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(3));
-                }
-            }
-            return documentosSemelhantes.stream().map(Document::getContent).toList();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
         }
     }
 
@@ -228,7 +208,9 @@ public class ChatServiceImpl implements ChatService {
         if (!user.getId().equals(chat.getUser().getId())) {
             throw new UnauthorizedException("User not authorized to access this document");
         }
-        return chatHistoryRepository.findByChat_IdOrderByDateAsc(id);
+        List<ChatHistory> messages = chatHistoryRepository.findByChat_IdOrderByDateAsc(id);
+
+        return messages;
     }
 
     @Override
