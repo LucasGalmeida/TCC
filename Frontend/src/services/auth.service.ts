@@ -1,6 +1,6 @@
 import { LoginRequestDTO } from '../types/LoginRequestDTO';
 import { RegisterRequestDTO } from '../types/RegisterRequestDTO';
-import backend from './server-config';
+import backend from '../config/server-config';
 
 const route = "/auth";
 
