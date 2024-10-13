@@ -2,7 +2,7 @@ package com.lucasgalmeida.llama.domain.exceptions.document;
 
 public class DocumentTypeException extends RuntimeException {
     public DocumentTypeException() {
-        super("Unsupported file type");
+        super("Tipo de arquivo não suportado");
     }
     public DocumentTypeException(String message) {
         super(message);

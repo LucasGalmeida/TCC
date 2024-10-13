@@ -67,7 +67,7 @@ public class DocumentServiceImpl implements DocumentService {
         try {
             file.transferTo(fullPath.toFile());
         } catch (IOException e) {
-            throw new DocumentStorageException("Failed to store file: " + newDocumentName, e);
+            throw new DocumentStorageException("Falha ao armazenar documento: " + newDocumentName, e);
         }
         return newDocumentName;
     }
@@ -78,7 +78,7 @@ public class DocumentServiceImpl implements DocumentService {
         if (resource.exists() && resource.isReadable()) {
             return resource;
         } else {
-            throw new FileNotFoundException("Unable to read the file");
+            throw new FileNotFoundException("Falha ao ler documento");
         }
     }
 
@@ -121,17 +121,17 @@ public class DocumentServiceImpl implements DocumentService {
 
     public void deleteDocument(Path fullPath) {
         try {
-            log.info("Attempting to delete file at path: {}", fullPath);
+            log.info("Tentando deletar o arquivo do caminho: {}", fullPath);
             boolean isDeleted = Files.deleteIfExists(fullPath);
             if (isDeleted) {
-                log.info("Document deleted successfully: {}", fullPath);
+                log.info("Documento deletado com sucesso: {}", fullPath);
             } else {
                 throw new FileNotFoundException();
             }
         } catch (FileNotFoundException e) {
-            throw new DocumentStorageException("Document not found or could not be deleted");
+            throw new DocumentStorageException("Documento não foi encontrado ou não pode ser deletado");
         } catch (IOException e) {
-            throw new DocumentStorageException("Failed to delete the file", e);
+            throw new DocumentStorageException("Falha ao deletar o documento", e);
         }
     }
 
@@ -162,7 +162,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     private void validateDocumentType(String contentType) {
         if (contentType == null || !isSupportedContentType(contentType)) {
-            throw new DocumentTypeException("Unsupported file type. Please upload ony PDFs.");
+            throw new DocumentTypeException("Tipo de arquivo não suportado. Por favor insira apenas PDF's");
         }
     }
 
@@ -211,7 +211,7 @@ public class DocumentServiceImpl implements DocumentService {
         try {
             saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER));
         } catch (IOException e) {
-            throw new DocumentStorageException("Failed to store file: " + file.getOriginalFilename(), e);
+            throw new DocumentStorageException("Falha ao armazenar o arquivo: " + file.getOriginalFilename(), e);
         }
         return document;
     }
@@ -228,10 +228,10 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Document getDocumentById(Integer id) {
-        Document document = repository.findById(id).orElseThrow(() -> new DocumentNotFoundException("Document not found"));
+        Document document = repository.findById(id).orElseThrow(DocumentNotFoundException::new);
         User user = authService.findAuthenticatedUser();
         if (!user.getId().equals(document.getUser().getId())) {
-            throw new UnauthorizedException("User not authorized to access this document");
+            throw new UnauthorizedException("Usuario não autorizado a acessar esse documento");
         }
         return document;
     }

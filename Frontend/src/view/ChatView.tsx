@@ -130,7 +130,7 @@ const ChatView: React.FC<DocumentListProps> = ({ documents }) => {
         ))}
         {isResponding && (
           <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '10px' }}>
-            <Spin tip="Chat PDF está digitando..." >
+            <Spin tip="A IA está digitando..." >
               <div></div>
             </Spin>
           </div>

@@ -34,6 +34,13 @@ spring:
     enable: true
 
   ai:
+    ollama:
+      embedding:
+        options:
+          model: nomic-embed-text
+      chat:
+        options:
+          model: llama3.2
     vectorstore:
       pgvector:
         index-type: HNSW
