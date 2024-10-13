@@ -383,7 +383,7 @@ const handleEdit = () => {
           }}
         >
            {React.Children.map(children, child => 
-            React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<any>, { documents }) : child
+            React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<any>, { documents, showModal }) : child
           )}
         </Content>
         <Footer style={{ textAlign: 'center' }}>ChatIA ©2024</Footer>

@@ -21,7 +21,7 @@ public class VectorStoreServiceImpl implements VectorStoreService {
     @Override
     public void deleteByIdList(List<UUID> vectorStoreIds) {
         repository.deleteAllById(vectorStoreIds);
-        log.info("Deleting vectors by ids: %s".formatted(vectorStoreIds.stream().map(UUID::toString).collect(Collectors.joining(", "))));
+        log.info("Deletando vetores por ids: %s".formatted(vectorStoreIds.stream().map(UUID::toString).collect(Collectors.joining(", "))));
     }
 
     @Override

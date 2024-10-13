@@ -36,16 +36,16 @@ public class AuthServiceImpl implements AuthService {
         User user = userService.findUserByLogin(body.login()).orElseThrow(UserNotFoundException::new);
         if(passwordEncoder.matches(body.password(), user.getPassword())) {
             String token = tokenService.generateToken(user);
-            log.info("Sucesseful login for user: {}", body.login());
+            log.info("Login bem sucedido para o usuário : {}", body.login());
             return new AuthResponseDTO(user.getLogin(), token);
         }
-        log.error("Wrong password for user: {}", body.login());
+        log.error("Senha incorreta para o usuárior: {}", body.login());
         throw new InvalidCredentialsException();
     }
 
     @Override
     public AuthResponseDTO register(RegisterRequestDTO body) {
-        log.info("Trying register the user: {}", body.login());
+        log.info("Tentando registar o usuário: {}", body.login());
         Optional<User> user = userService.findUserByLogin(body.login());
 
         if (user.isPresent()) {
@@ -59,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
         userService.salvarUsuario(newUser);
 
         String token = tokenService.generateToken(newUser);
-        log.info("New user registered: {}", body.login());
+        log.info("Novo usuário registrado: {}", body.login());
         return new AuthResponseDTO(newUser.getName(), token);
 
     }
@@ -69,13 +69,13 @@ public class AuthServiceImpl implements AuthService {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
-                throw new UsernameNotFoundException("Invalid user");
+                throw new UsernameNotFoundException("Usuário inválido");
             }
             User user = (User) authentication.getPrincipal();
-            if(Objects.isNull(user)) new UsernameNotFoundException("Invalid user");
+            if(Objects.isNull(user)) new UsernameNotFoundException("Usuário inválido");
             return user;
         } catch (Exception e) {
-            throw new UsernameNotFoundException("Invalid user", e);
+            throw new UsernameNotFoundException("Usuário inválido", e);
         }
     }
 

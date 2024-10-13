@@ -1,26 +1,18 @@
 spring:
+  profiles:
+    active: local
+
   application:
-    name: spring-ai-llama
+    name: backend-spring-ai
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
     password: postgres
 
-  ai:
-    ollama:
-      base-url: http://localhost:11434
-      embedding:
-        options:
-          model: nomic-embed-text
-      chat:
-        options:
-          model: llama3.2
-    vectorstore:
-      pgvector:
-        index-type: HNSW
-        distance-type: COSINE_DISTANCE
-        dimension: 768 # necessário alterar também tabela no banco postgres
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
   jpa:
     hibernate:
@@ -41,15 +33,51 @@ spring:
     locations: classpath:db.migration
     enable: true
 
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
-
-filePath: e://Ollama
+  ai:
+    ollama:
+      embedding:
+        options:
+          model: nomic-embed-text
+      chat:
+        options:
+          model: llama3.2
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimension: 768
 
 api:
   security:
     token:
       secret: my-secret-key
       expiration-hours: 2
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+  docker:
+    compose:
+      lifecycle-management: NONE
+filePath: e://ArquivosUsuarios
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://db:5433/postgres-docker
+  ai:
+    ollama:
+      base-url: http://ollama-llm:11434
+  docker:
+    compose:
+      lifecycle-management: START_AND_STOP
+filePath: /app/data

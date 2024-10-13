@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<String> handleIOException(IOException ex) {
-        return new ResponseEntity<>("An error occurred while processing the input/output operation.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>("Ocorreu um erro ao processar a operação de entrada/saída.", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
