@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PdfPreview from '../components/PdfPreview';
 import DocumentService from '../services/document.service';
 import { useParams } from 'react-router-dom';
+import { message } from 'antd';
 
 
 const DocumentView: React.FC = () => {
@@ -23,7 +24,7 @@ const DocumentView: React.FC = () => {
       setPdfUrl(url);
     })
     .catch(error => {
-      console.error("Erro ao buscar documento por id: ", error.response.data);
+      message.error("Erro ao buscar documento por id: " + error.response.data);
     });
   }
 

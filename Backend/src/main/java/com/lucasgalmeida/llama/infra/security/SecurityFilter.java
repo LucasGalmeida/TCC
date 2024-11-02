@@ -1,6 +1,7 @@
 package com.lucasgalmeida.llama.infra.security;
 
 import com.lucasgalmeida.llama.domain.entities.User;
+import com.lucasgalmeida.llama.domain.exceptions.auth.UserNotFoundException;
 import com.lucasgalmeida.llama.domain.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -44,7 +45,7 @@ public class SecurityFilter extends OncePerRequestFilter {
     }
 
     private void setUpSpringAuthentication(String login) {
-        User user = userRepository.findByLogin(login).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByLogin(login).orElseThrow(UserNotFoundException::new);
         var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
         var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);

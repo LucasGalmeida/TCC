@@ -12,7 +12,7 @@
 	<artifactId>spring-ai-llama</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Spring AI LLama</name>
-	<description>Backend que utiliza o Spring AI com o modelo llama 3.1</description>
+	<description>Backend que utiliza o Spring AI com o modelo llama 3.2</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -115,6 +115,13 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.6.0</version>
+		</dependency>
+		<!-- Docker -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-docker-compose</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>

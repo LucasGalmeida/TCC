@@ -25,7 +25,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        log.info("Starting security filter chain");
+        log.info("Iniciando cadeia de filtro de segurança");
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -43,13 +43,13 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        log.info("Starting password encorder");
+        log.info("Encriptando senha");
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        log.info("Starting authentication manager");
+        log.info("Iniciando gerenciador de autenticação");
         return authenticationConfiguration.getAuthenticationManager();
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -19,14 +20,9 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    @PostMapping("/chat-generico/{chatId}")
-    public ResponseEntity<ChatHistory> chat(@RequestBody RequestDTO request, @PathVariable Integer chatId) {
-        return ResponseEntity.ok(chatService.chatGenerico(request.query(), chatId));
-    }
-
-    @PostMapping("/chat-embedding/{chatId}")
-    public ResponseEntity<ChatHistory> chatEmbedding(@RequestBody RequestDTO request, @PathVariable Integer chatId) {
-        return ResponseEntity.ok(chatService.chatEmbedding(request.query(), chatId, request.documentsIds()));
+    @PostMapping("/chat-ia/{chatId}")
+    public ResponseEntity<ChatHistory> chatIA(@RequestBody RequestDTO request, @PathVariable Integer chatId) {
+        return ResponseEntity.ok(chatService.chatIA(request.query(), chatId, request.documentsIds()));
     }
 
     @PostMapping("/process/{id}")
@@ -45,6 +41,11 @@ public class ChatController {
         return ResponseEntity.ok(chatService.createNewChat(title));
     }
 
+    @PutMapping("/change-title/{id}")
+    public ResponseEntity<Chat> changeTitle(@PathVariable Integer id, @RequestParam String title) {
+        return ResponseEntity.ok(chatService.changeTitle(id, title));
+    }
+
     @GetMapping
     public ResponseEntity<List<Chat>> myChats() {
         return ResponseEntity.ok(chatService.findAllChatsByUser());
@@ -58,6 +59,12 @@ public class ChatController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteChatById(@PathVariable Integer id) {
         chatService.deleteChatById(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/last-chat-history/{id}")
+    public ResponseEntity<?> deleteLastChatHistoryByChatId(@PathVariable Integer id) {
+        chatService.deleteLastChatHistoryByChatId(id);
         return ResponseEntity.ok().build();
     }
 }

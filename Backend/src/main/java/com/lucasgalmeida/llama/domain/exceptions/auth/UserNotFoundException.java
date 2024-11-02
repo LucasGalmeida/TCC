@@ -3,7 +3,7 @@ package com.lucasgalmeida.llama.domain.exceptions.auth;
 public class UserNotFoundException extends RuntimeException {
 
     public UserNotFoundException() {
-        super("User not found");
+        super("Usuário não encontrado");
     }
     public UserNotFoundException(String message) {
         super(message);
