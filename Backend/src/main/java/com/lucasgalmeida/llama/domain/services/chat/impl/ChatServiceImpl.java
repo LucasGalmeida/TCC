@@ -33,6 +33,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -123,6 +124,31 @@ public class ChatServiceImpl implements ChatService {
                         .call().content();
             }
             return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao se comunidar com a LLM");
+        }
+    }
+
+    @Override
+    public Flux<String> chatWithStream(String query, List<Integer> documentsIds) {
+        try {
+            List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
+
+            FilterExpressionBuilder b = new FilterExpressionBuilder();
+            FilterExpressionBuilder.Op op = null;
+            for (String fileName : fileNames) {
+                if (op == null) {
+                    op = b.or(b.eq("file_name", fileName), b.eq("source", fileName));
+                } else {
+                    op = b.or(op, b.or(b.eq("file_name", fileName), b.eq("source", fileName)));
+                }
+            }
+            return chatClient
+                    .prompt().user(query)
+                    .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
+                    .stream()
+                    .content();
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Erro ao se comunidar com a LLM");

@@ -8,6 +8,7 @@ import com.lucasgalmeida.llama.domain.services.chat.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -66,5 +67,10 @@ public class ChatController {
     public ResponseEntity<?> deleteLastChatHistoryByChatId(@PathVariable Integer id) {
         chatService.deleteLastChatHistoryByChatId(id);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/meu-professor-responde")
+    public Flux<String> meuProfessorRespnde(@RequestBody RequestDTO request) {
+        return chatService.chatWithStream(request.query(), request.documentsIds());
     }
 }
