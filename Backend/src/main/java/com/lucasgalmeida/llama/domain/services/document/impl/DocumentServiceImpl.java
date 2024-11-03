@@ -64,7 +64,7 @@ public class DocumentServiceImpl implements DocumentService {
             Files.createDirectories(directoryPath);
         }
 
-        Path fullPath = directoryPath.resolve(newDocumentName + ".pdf");
+        Path fullPath = directoryPath.resolve(newDocumentName);
         try {
             file.transferTo(fullPath.toFile());
         } catch (IOException e) {
@@ -85,13 +85,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Path getFullPath(Document document) {
-        return Paths.get(path, document.getUser().getId().toString(), getFinalFileName(document));
-    }
-
-    public String getFinalFileName(Document document) {
-        String fileNameWithoutExtension = removeExtension(document.getName());
-        String extension = getExtension(document.getName());
-        return fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + (StringUtils.isNotEmpty(extension) ? ("." + extension) : ".pdf");
+        return Paths.get(path, document.getUser().getId().toString(), document.getOriginalFileName());
     }
 
     @Override
@@ -102,17 +96,10 @@ public class DocumentServiceImpl implements DocumentService {
         }
         return new ArrayList<>();
     }
-
-    @Override
-    public List<String> getFileNamesFromAllDocuments() {
-        List<Document> myDocuments = getMyDocuments();
-        return myDocuments.stream().map(this::getFinalFileName).toList();
-    }
-
     @Override
     public List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds) {
         List<Document> myDocuments = repository.findAllById(documentsIds);
-        return myDocuments.stream().map(this::getFinalFileName).toList();
+        return myDocuments.stream().map(Document::getOriginalFileName).toList();
     }
 
     @Override
@@ -124,33 +111,9 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional
     public Document updateDocument(Document document) {
         Document salvar = getDocumentById(document.getId());
-
-        Resource resource = getResourceById(document.getId());
-
         salvar.setName(document.getName());
         salvar.setDescription(document.getDescription());
         salvar = repository.save(salvar);
-
-
-        Path resourcePath;
-        try {
-            resourcePath = resource.getFile().toPath();
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao acessar o arquivo do recurso", e);
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-        String dataFormatada = salvar.getDateUpload().format(formatter);
-
-        String newFileName = generateDocumentName(document.getName(), dataFormatada);
-        Path newFilePath = resourcePath.resolveSibling(newFileName + ".pdf");
-
-        try {
-            Files.move(resourcePath, newFilePath);
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao renomear o arquivo", e);
-        }
-
         return salvar;
     }
 
@@ -168,22 +131,6 @@ public class DocumentServiceImpl implements DocumentService {
         } catch (IOException e) {
             throw new DocumentStorageException("Falha ao deletar o documento", e);
         }
-    }
-
-    private String removeExtension(String filePath) {
-        int lastDotIndex = filePath.lastIndexOf('.');
-        if (lastDotIndex != -1 && lastDotIndex > filePath.lastIndexOf(File.separator)) {
-            return filePath.substring(0, lastDotIndex);
-        }
-        return filePath;
-    }
-
-    private String getExtension(String filePath) {
-        int lastDotIndex = filePath.lastIndexOf('.');
-        if (lastDotIndex != -1 && lastDotIndex > filePath.lastIndexOf(File.separator)) {
-            return filePath.substring(lastDotIndex + 1);
-        }
-        return "";
     }
 
     private void validateDocumentSize(long fileSize) {
@@ -213,7 +160,7 @@ public class DocumentServiceImpl implements DocumentService {
     private String generateDocumentName(String originalDocumentName, String dateUpload) {
         String extension = getDocumentExtension(originalDocumentName);
         String baseName = originalDocumentName.replace(extension, "");
-        return baseName + "_" + dateUpload;
+        return baseName + "_" + dateUpload + ".pdf";
     }
 
     @Override
@@ -242,13 +189,12 @@ public class DocumentServiceImpl implements DocumentService {
         LocalDateTime dateUpload = LocalDateTime.now();
         document.setDateUpload(dateUpload);
         document.setUser(authService.findAuthenticatedUser());
-        document = repository.save(document);
         try {
-            saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER));
+            document.setOriginalFileName(saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER)));
         } catch (IOException e) {
             throw new DocumentStorageException("Falha ao armazenar o arquivo: " + file.getOriginalFilename(), e);
         }
-        return document;
+        return repository.save(document);
     }
 
     @Override

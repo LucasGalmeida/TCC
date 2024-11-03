@@ -45,7 +45,7 @@ public class DocumentController {
     }
 
     @GetMapping("/resource/{id}")
-    public ResponseEntity<Resource> getResourceById(@PathVariable Integer id) throws IOException {
+    public ResponseEntity<Resource> getResourceById(@PathVariable Integer id) {
         Resource resource = service.getResourceById(id);
         if (resource.exists()) {
             HttpHeaders headers = new HttpHeaders();

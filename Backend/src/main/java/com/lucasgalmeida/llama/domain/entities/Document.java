@@ -23,6 +23,8 @@ public class Document {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column(name = "original_file_name")
+    private String originalFileName;
     private String name;
     private String description;
     private String type;
