@@ -10,9 +10,9 @@ const HomeView = ({ showModal }:any) => {
   return (
     <div>
       <section style={{ backgroundColor: '#f0f2f5', textAlign: 'center' }}>
-        <Title level={1}>Bem-vindo ao ChatIA</Title>
+        <Title level={1}>Bem-vindo ao Meu Professor Responde!</Title>
         <Paragraph style={{ fontSize: '18px', maxWidth: '800px', margin: '0 auto' }}>
-          Seu assistente de IA está aqui para ajudar você a analisar e aprender com seus documentos.
+          Seu assistente de IA está aqui para ajudar você a responder as dúvidas de seus alunos.
         </Paragraph>
         <img 
           src={conversarIa}
@@ -42,7 +42,7 @@ const HomeView = ({ showModal }:any) => {
               ]}
             >
               <Paragraph>
-                Faça upload dos seus arquivos de maneira rápida e fácil! Com nossa plataforma, você pode enviar seus documentos diretamente para o sistema em poucos cliques. Basta arrastar e soltar seus arquivos ou selecionar a opção de upload para começar. A nossa ferramenta suporta diversos formatos de arquivo, garantindo que você possa carregar tudo o que precisa sem complicações. Após o upload, nossa inteligência artificial analisará seus documentos e fornecerá insights valiosos, ajudando você a extrair o máximo de informações e otimizar seus processos. Experimente agora e veja como é simples integrar seus arquivos ao nosso sistema!
+                Faça upload dos seus cursos de maneira rápida e fácil! Com nossa plataforma, você pode enviar seus documentos diretamente para o sistema em poucos cliques. Basta arrastar e soltar seus arquivos ou selecionar a opção de upload para começar. A nossa ferramenta suporta diversos formatos de arquivo, garantindo que você possa carregar tudo o que precisa sem complicações. Após o upload, nossa inteligência artificial analisará seus documentos e fornecerá insights valiosos, ajudando você a extrair o máximo de informações e otimizar seus processos. Experimente agora e veja como é simples integrar seus arquivos ao nosso sistema!
               </Paragraph>
             </Card>
           </Col>
@@ -63,7 +63,7 @@ const HomeView = ({ showModal }:any) => {
               ]}
             >
               <Paragraph>
-                Inicie a conversa agora e descubra como nossa IA pode transformar a maneira como você interage com seus documentos! Ao começar uma conversa, você terá a oportunidade de explorar as funcionalidades do nosso sistema, fazer perguntas, obter respostas precisas e personalizadas, e até mesmo receber sugestões baseadas nos documentos que você enviou. Não perca a chance de ver como a nossa tecnologia pode ajudar a otimizar seus processos e fornecer insights valiosos. Clique no botão abaixo para iniciar uma conversa e começar a sua jornada com nossa inteligência artificial.
+                Inicie a conversa agora e descubra como nossa IA pode transformar a maneira como você expoem informações sobre seus cursos! Ao começar uma conversa, você terá a oportunidade de explorar as funcionalidades do nosso sistema, fazer perguntas, obter respostas precisas e personalizadas, e até mesmo receber sugestões baseadas nos documentos que você enviou. Não perca a chance de ver como a nossa tecnologia pode ajudar a otimizar seus processos e fornecer insights valiosos. Clique no botão abaixo para iniciar uma conversa e começar a sua jornada com nossa inteligência artificial.
               </Paragraph>
             </Card>
           </Col>

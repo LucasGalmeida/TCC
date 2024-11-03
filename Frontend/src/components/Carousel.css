@@ -1,0 +1,37 @@
+.carousel-container {
+    position: relative;
+    width: 80%;
+    margin: 0 auto;
+  }
+  
+  .nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background-color: #001529;
+    color: #fff;
+    border: none;
+    opacity: 0.8;
+  }
+  
+  .nav-button:hover {
+    opacity: 1;
+  }
+  
+  .left {
+    left: -50px;
+  }
+  
+  .right {
+    right: -50px;
+  }
+  
+  .ant-carousel .slick-dots li button {
+    background-color: #001529;
+  }
+  
+  .ant-carousel .slick-dots li.slick-active button {
+    background-color: #40a9ff;
+  }
+  
