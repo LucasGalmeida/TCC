@@ -61,5 +61,10 @@ public class DocumentController {
     public ResponseEntity<List<Document>> getMyDocuments() {
         return ResponseEntity.ok(service.getMyDocuments());
     }
+
+    @PutMapping
+    public ResponseEntity<Document> updateDocument(@RequestBody Document document) {
+        return ResponseEntity.ok(service.updateDocument(document));
+    }
 }
 

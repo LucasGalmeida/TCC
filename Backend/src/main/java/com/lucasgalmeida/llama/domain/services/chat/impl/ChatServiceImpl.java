@@ -59,9 +59,6 @@ public class ChatServiceImpl implements ChatService {
     public ChatServiceImpl(ChatClient.Builder builder, DocumentService documentService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = builder
                 .defaultSystem("Você é uma IA séria que consegue interagir com o usuário de maneira clara e objetiva. Se solicitado, forneça exemplos. NÃO consulte os documentos disponibilizados por contra própria. Você deve consultar a documentação APENAS se solicitado.")
-                .defaultAdvisors(
-                        new MessageChatMemoryAdvisor(new InMemoryChatMemory())
-                )
                 .build();
         this.documentService = documentService;
         this.authService = authService;
@@ -120,7 +117,7 @@ public class ChatServiceImpl implements ChatService {
                         .advisors(a -> a
                                 .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         )
-                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op != null ? op.build(): null)))
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, op != null ? SearchRequest.defaults().withFilterExpression(op.build()) : SearchRequest.defaults()))
                         .call().content();
             }
             return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
@@ -146,7 +143,7 @@ public class ChatServiceImpl implements ChatService {
             }
             return chatClient
                     .prompt().user(query)
-//                    .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op != null ? op.build(): null)))
+//                    .advisors(new QuestionAnswerAdvisor(vectorStore, op != null ? SearchRequest.defaults().withFilterExpression(op.build()) : SearchRequest.defaults()))
                     .stream()
                     .content().map(content -> content.replace(" ", "\u00A0"));
         } catch (Exception e) {

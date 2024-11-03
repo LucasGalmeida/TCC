@@ -13,6 +13,7 @@ import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -63,7 +64,7 @@ public class DocumentServiceImpl implements DocumentService {
             Files.createDirectories(directoryPath);
         }
 
-        Path fullPath = directoryPath.resolve(newDocumentName);
+        Path fullPath = directoryPath.resolve(newDocumentName + ".pdf");
         try {
             file.transferTo(fullPath.toFile());
         } catch (IOException e) {
@@ -90,7 +91,7 @@ public class DocumentServiceImpl implements DocumentService {
     public String getFinalFileName(Document document) {
         String fileNameWithoutExtension = removeExtension(document.getName());
         String extension = getExtension(document.getName());
-        return fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + "." + extension;
+        return fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + (StringUtils.isNotEmpty(extension) ? ("." + extension) : ".pdf");
     }
 
     @Override
@@ -117,6 +118,40 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public void salvarDocumento(Document document) {
         repository.save(document);
+    }
+
+    @Override
+    @Transactional
+    public Document updateDocument(Document document) {
+        Document salvar = getDocumentById(document.getId());
+
+        Resource resource = getResourceById(document.getId());
+
+        salvar.setName(document.getName());
+        salvar.setDescription(document.getDescription());
+        salvar = repository.save(salvar);
+
+
+        Path resourcePath;
+        try {
+            resourcePath = resource.getFile().toPath();
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao acessar o arquivo do recurso", e);
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String dataFormatada = salvar.getDateUpload().format(formatter);
+
+        String newFileName = generateDocumentName(document.getName(), dataFormatada);
+        Path newFilePath = resourcePath.resolveSibling(newFileName + ".pdf");
+
+        try {
+            Files.move(resourcePath, newFilePath);
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao renomear o arquivo", e);
+        }
+
+        return salvar;
     }
 
     public void deleteDocument(Path fullPath) {
@@ -178,7 +213,7 @@ public class DocumentServiceImpl implements DocumentService {
     private String generateDocumentName(String originalDocumentName, String dateUpload) {
         String extension = getDocumentExtension(originalDocumentName);
         String baseName = originalDocumentName.replace(extension, "");
-        return baseName + "_" + dateUpload + extension;
+        return baseName + "_" + dateUpload;
     }
 
     @Override
