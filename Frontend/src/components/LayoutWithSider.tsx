@@ -386,7 +386,7 @@ const handleEdit = () => {
             React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<any>, { documents, showModal }) : child
           )}
         </Content>
-        <Footer style={{ textAlign: 'center' }}>ChatIA ©2024</Footer>
+        <Footer style={{ textAlign: 'center' }}>Meu professor responde ©2024</Footer>
       </Layout>
 
 

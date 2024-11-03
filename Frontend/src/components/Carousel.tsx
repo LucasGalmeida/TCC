@@ -24,15 +24,15 @@ function CourseCarousel({ onSelectCourse }:any) {
   return (
     <div className="carousel-container">
       <Button className="nav-button left" onClick={handlePrev} icon={<LeftOutlined />} />
-      <Carousel ref={carouselRef} dotPosition="bottom" autoplay>
+      <Carousel ref={carouselRef} dotPosition="bottom" autoplay autoplaySpeed={4000}>
         {courses.map((course) => (
           <div key={course.id}>
             <Card
               title={course.title}
-              bordered={false}
-              style={{ width: 300, margin: '20px auto', textAlign: 'center', borderRadius: '8px' }}
+              bordered={true}
+              style={{ width: 300, margin: '20px auto', textAlign: 'center', borderRadius: '8px', border: '1px solid black' }}
               hoverable
-              onClick={() => onSelectCourse(course.id)}
+              onClick={() => onSelectCourse(course)}
             >
               <p>{course.description}</p>
             </Card>
