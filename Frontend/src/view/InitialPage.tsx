@@ -1,10 +1,11 @@
 // src/components/InitialPage.js
-import { Button, Layout, Modal } from 'antd';
+import { Button, Layout, Modal, message } from 'antd';
 import { Content, Header } from 'antd/es/layout/layout';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CourseCarousel from '../components/Carousel';
 import TextArea from 'antd/es/input/TextArea';
+import ChatService from '../services/chat.service';
 
 function InitialPage() {
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
@@ -27,30 +28,33 @@ function InitialPage() {
 
   const handleSendMessage = () => {
     if (newMessage.trim() === '') return;
+    if (selectedCourse == null) return;
+    setLoading(true);
     const newChat = {
       message: newMessage,
       date: new Date(),
       type: 'USER_REQUEST',
     };
-    setChatHistory([...chatHistory, newChat]);
-    setNewMessage('');
-    setLoading(false);
 
-    // Simulação de resposta automática da IA
-    setTimeout(() => {
-      setChatHistory((prev:any) => [
-        ...prev,
+    ChatService.chamadaStream(newMessage, [selectedCourse.id]).then((data:any) => {
+      setChatHistory([...chatHistory, newChat]);
+      setNewMessage('');
+      setChatHistory((prevChatHistory:any) => [
+        ...prevChatHistory,
         {
-          message: 'Esta é uma resposta simulada da IA.',
+          message: data,
           date: new Date(),
           type: 'AI_RESPONSE',
         },
       ]);
-    }, 1000);
+    }).catch(error => {
+      message.error("Erro ao fazer chamada a LLM:" + error.response.data);
+    }).finally(() => setLoading(false));
   };
 
   const handleModalClose = () => {
     setIsModalVisible(false);
+    setLoading(false);
     setChatHistory([]);
   };
 

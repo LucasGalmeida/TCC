@@ -120,7 +120,7 @@ public class ChatServiceImpl implements ChatService {
                         .advisors(a -> a
                                 .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         )
-                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op != null ? op.build(): null)))
                         .call().content();
             }
             return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
@@ -146,7 +146,7 @@ public class ChatServiceImpl implements ChatService {
             }
             return chatClient
                     .prompt().user(query)
-                    .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
+                    .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op != null ? op.build(): null)))
                     .stream()
                     .content();
         } catch (Exception e) {
@@ -236,9 +236,7 @@ public class ChatServiceImpl implements ChatService {
         if (!user.getId().equals(chat.getUser().getId())) {
             throw new UnauthorizedException("Usuário não autorizado para ver esse chat");
         }
-        List<ChatHistory> messages = chatHistoryRepository.findByChat_IdOrderByDateAsc(id);
-
-        return messages;
+        return chatHistoryRepository.findByChat_IdOrderByDateAsc(id);
     }
 
     @Override

@@ -82,7 +82,12 @@ class ChatService {
           throw error;
         }
     }
-      
+     
+    static async chamadaStream(query:string, documentsIds: number[]){
+        const response = await backend.post(`${route}/meu-professor-responde`, {query:query, documentsIds: documentsIds});
+        return response.data;
+    }
+
 }
 
 export default ChatService;
