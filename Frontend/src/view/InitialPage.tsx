@@ -35,21 +35,43 @@ function InitialPage() {
       date: new Date(),
       type: 'USER_REQUEST',
     };
+    setChatHistory([...chatHistory, newChat]);
+    setNewMessage('');
 
-    ChatService.chamadaStream(newMessage, [selectedCourse.id]).then((data:any) => {
-      setChatHistory([...chatHistory, newChat]);
-      setNewMessage('');
-      setChatHistory((prevChatHistory:any) => [
-        ...prevChatHistory,
-        {
-          message: data,
-          date: new Date(),
-          type: 'AI_RESPONSE',
-        },
-      ]);
-    }).catch(error => {
-      message.error("Erro ao fazer chamada a LLM:" + error.response.data);
-    }).finally(() => setLoading(false));
+    try {
+      const eventSource = ChatService.chamadaStream(newMessage, selectedCourse.id)
+  
+      eventSource.onmessage = (event) => {
+        setChatHistory((prevChatHistory: any) => {
+          const updatedChatHistory = [...prevChatHistory];
+          if (updatedChatHistory.length > 0 && updatedChatHistory[updatedChatHistory.length - 1].type === 'AI_RESPONSE') {
+            updatedChatHistory[updatedChatHistory.length - 1].message += event.data;
+          } else {
+            updatedChatHistory.push({
+              message: event.data,
+              date: new Date(),
+              type: 'AI_RESPONSE',
+            });
+          }
+          return updatedChatHistory;
+        });
+      };
+  
+      eventSource.onerror = (error) => {
+        console.error('Erro na conexão SSE:', error);
+        eventSource.close();
+        message.error('Erro ao processar o stream de SSE');
+        setLoading(false);
+      };
+  
+      eventSource.onopen = () => {
+        console.log('Conexão SSE aberta');
+      };
+    } catch (error) {
+      console.error('Erro ao iniciar EventSource:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleModalClose = () => {

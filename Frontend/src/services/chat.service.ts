@@ -83,9 +83,10 @@ class ChatService {
         }
     }
      
-    static async chamadaStream(query:string, documentsIds: number[]){
-        const response = await backend.post(`${route}/meu-professor-responde`, {query:query, documentsIds: documentsIds});
-        return response.data;
+    static chamadaStream(query:string, documentsIds: number){
+        const baseURL = backend.defaults.baseURL;
+        const aux = `${baseURL}${route}/meu-professor-responde?query=${encodeURIComponent(query)}&documentsIds=${documentsIds}`;
+        return new EventSource(aux);
     }
 
 }

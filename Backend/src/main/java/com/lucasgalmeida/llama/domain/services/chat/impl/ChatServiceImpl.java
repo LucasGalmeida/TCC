@@ -146,9 +146,9 @@ public class ChatServiceImpl implements ChatService {
             }
             return chatClient
                     .prompt().user(query)
-                    .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op != null ? op.build(): null)))
+//                    .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op != null ? op.build(): null)))
                     .stream()
-                    .content();
+                    .content().map(content -> content.replace(" ", "\u00A0"));
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Erro ao se comunidar com a LLM");

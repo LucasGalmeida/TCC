@@ -6,6 +6,7 @@ import com.lucasgalmeida.llama.domain.entities.Chat;
 import com.lucasgalmeida.llama.domain.entities.ChatHistory;
 import com.lucasgalmeida.llama.domain.services.chat.ChatService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -69,8 +70,8 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/meu-professor-responde")
-    public Flux<String> meuProfessorRespnde(@RequestBody RequestDTO request) {
-        return chatService.chatWithStream(request.query(), request.documentsIds());
+    @GetMapping(value = "/meu-professor-responde", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> meuProfessorRespnde(@RequestParam String query, @RequestParam List<Integer> documentsIds) {
+        return chatService.chatWithStream(query, documentsIds);
     }
 }
