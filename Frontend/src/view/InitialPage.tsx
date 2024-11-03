@@ -60,7 +60,7 @@ function InitialPage() {
       eventSource.onerror = (error) => {
         console.error('Erro na conexão SSE:', error);
         eventSource.close();
-        message.error('Erro ao processar o stream de SSE');
+        // message.error('Erro ao processar o stream de SSE');
         setLoading(false);
       };
   
@@ -94,7 +94,7 @@ function InitialPage() {
             <CourseCarousel onSelectCourse={handleSelectCourse} />
           </div>
           <Modal
-          title={`Chat do Curso: ${selectedCourse?.title}`}
+          title={`Chat do Curso: ${selectedCourse?.name}`}
           visible={isModalVisible}
           onCancel={handleModalClose}
           footer={null}

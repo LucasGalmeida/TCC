@@ -39,7 +39,7 @@ const DocumentView: React.FC = () => {
   const handleSave = () => {
     if(documentName.trim() == "") return;
     if(!documentId) return;
-    DocumentService.updateDocumentById(parseInt(documentId), documentName, documentDescription).then((data:any) => {
+    DocumentService.updateDocumentById(parseInt(documentId), documentName, documentDescription).then((_:any) => {
       message.success(`Documento "${documentName}" salvo com sucesso!`);
     })
     .catch(error => {

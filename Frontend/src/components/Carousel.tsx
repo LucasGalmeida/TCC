@@ -1,17 +1,27 @@
-import React from 'react';
-import { Carousel, Card, Button } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Carousel, Card, Button, message } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import './Carousel.css'; 
+import { Document } from '../types/Document';
+import DocumentService from '../services/document.service';
 
-const courses = [
-  { id: '1', title: 'Curso de React', description: 'Aprenda React do básico ao avançado' },
-  { id: '2', title: 'Curso de JavaScript', description: 'Domine JavaScript e conceitos modernos' },
-  { id: '3', title: 'Curso de CSS Avançado', description: 'Estilize suas aplicações com técnicas avançadas de CSS' },
-  { id: '4', title: 'Curso de Node.js', description: 'Construa servidores e APIs robustas' },
-];
-
-function CourseCarousel({ onSelectCourse }:any) {
+function CourseCarousel({ onSelectCourse }: any) {
   const carouselRef:any = React.createRef();
+  const [documents, setDocuments] = useState<Document[]>([]);
+
+  useEffect(() => {
+    buscarMeusDocumentos();
+  }, [])
+
+  function buscarMeusDocumentos(){
+    DocumentService.myDocuments()
+    .then(response => {
+      setDocuments(response.filter((document:any) => document.processed));
+    })
+    .catch(error => {
+      message.error("Erro ao buscar cursos: " + error.response.data);
+    });
+  }
 
   const handlePrev = () => {
     carouselRef.current.prev();
@@ -23,23 +33,29 @@ function CourseCarousel({ onSelectCourse }:any) {
 
   return (
     <div className="carousel-container">
-      <Button className="nav-button left" onClick={handlePrev} icon={<LeftOutlined />} />
-      <Carousel ref={carouselRef} dotPosition="bottom" autoplay autoplaySpeed={4000}>
-        {courses.map((course) => (
-          <div key={course.id}>
-            <Card
-              title={course.title}
-              bordered={true}
-              style={{ width: 300, margin: '20px auto', textAlign: 'center', borderRadius: '8px', border: '1px solid black' }}
-              hoverable
-              onClick={() => onSelectCourse(course)}
-            >
-              <p>{course.description}</p>
-            </Card>
-          </div>
-        ))}
-      </Carousel>
-      <Button className="nav-button right" onClick={handleNext} icon={<RightOutlined />} />
+      {documents.length > 0 ? (
+        <>
+        <Button className="nav-button left" onClick={handlePrev} icon={<LeftOutlined />} />
+        <Carousel ref={carouselRef} dotPosition="bottom" autoplay autoplaySpeed={4000}>
+          {documents.map((course) => (
+            <div key={course.id}>
+              <Card
+                title={course.name}
+                bordered={true}
+                style={{ width: 300, margin: '20px auto', textAlign: 'center', borderRadius: '8px', border: '1px solid black' }}
+                hoverable
+                onClick={() => onSelectCourse(course)}
+              >
+                <p>{course.description}</p>
+              </Card>
+            </div>
+          ))}
+        </Carousel>
+        <Button className="nav-button right" onClick={handleNext} icon={<RightOutlined />} />
+        </>
+      ) : (
+        <h3 style={{textAlign: 'center'}}>Nenhum curso cadastrado no momento</h3>
+      )}
     </div>
   );
 }

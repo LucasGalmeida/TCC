@@ -141,11 +141,19 @@ public class ChatServiceImpl implements ChatService {
                     op = b.or(op, b.or(b.eq("file_name", fileName), b.eq("source", fileName)));
                 }
             }
-            return chatClient
-                    .prompt().user(query)
-//                    .advisors(new QuestionAnswerAdvisor(vectorStore, op != null ? SearchRequest.defaults().withFilterExpression(op.build()) : SearchRequest.defaults()))
-                    .stream()
-                    .content().map(content -> content.replace(" ", "\u00A0"));
+            if(op != null){
+                return chatClient
+                        .prompt().user(query)
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
+                        .stream()
+                        .content().map(content -> content.replace(" ", "\u00A0"));
+            } else {
+                return chatClient
+                        .prompt().user(query)
+                        .stream()
+                        .content().map(content -> content.replace(" ", "\u00A0"));
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Erro ao se comunidar com a LLM");
