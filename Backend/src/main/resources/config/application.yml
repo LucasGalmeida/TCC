@@ -1,19 +1,24 @@
 spring:
   profiles:
+    # Define que o profile usado sera o Local
     active: local
 
+  # Nome da aplicacao
   application:
     name: backend-spring-ai
 
+  # Dados de conexao do banco de dados
   datasource:
     username: postgres
     password: postgres
 
+  # Define o tamanho maximo do arquivo que a aplicacao pode receber
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
 
+  # Define que o banco de dados e o postgreSQL
   jpa:
     hibernate:
       ddl-auto: validate
@@ -23,6 +28,7 @@ spring:
       hibernate:
         format_sql: true
 
+  # Configuracoes do Flyway (migrations)
   flyway:
     baseline-on-migrate: true
     fail-on-missing-locations: true
@@ -33,51 +39,27 @@ spring:
     locations: classpath:db.migration
     enable: true
 
+  # Configuracao do Spring AI
   ai:
     ollama:
       embedding:
         options:
+          # Modelo de conversao de texto para Vetores Embeddings
           model: nomic-embed-text
       chat:
         options:
+          # Modelo de LLM
           model: llama3.2
     vectorstore:
+      # Configuracao da tabela que armazena os Embeddings
       pgvector:
         index-type: HNSW
         distance-type: COSINE_DISTANCE
         dimension: 768
 
+# Configuracao do token do spring security
 api:
   security:
     token:
       secret: my-secret-key
       expiration-hours: 2
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
-  datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-  ai:
-    ollama:
-      base-url: http://localhost:11434
-  docker:
-    compose:
-      lifecycle-management: NONE
-filePath: e://ArquivosUsuarios
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-  datasource:
-    url: jdbc:postgresql://db:5433/postgres-docker
-  ai:
-    ollama:
-      base-url: http://ollama-llm:11434
-  docker:
-    compose:
-      lifecycle-management: START_AND_STOP
-filePath: /app/data

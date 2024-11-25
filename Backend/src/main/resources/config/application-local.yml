@@ -1,0 +1,17 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  # url banco de dados
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+  # url ollama
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+  # desativa o docker
+  docker:
+    compose:
+      lifecycle-management: NONE
+# pasta onde os arquivos sao armazenados
+filePath: e://ArquivosUsuarios

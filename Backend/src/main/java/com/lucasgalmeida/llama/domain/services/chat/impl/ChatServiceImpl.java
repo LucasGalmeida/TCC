@@ -142,12 +142,14 @@ public class ChatServiceImpl implements ChatService {
                 }
             }
             if(op != null){
+                // Fluxo com RAG
                 return chatClient
                         .prompt().user(query)
                         .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
                         .stream()
                         .content().map(content -> content.replace(" ", "\u00A0"));
             } else {
+                // Fluxo sem RAG
                 return chatClient
                         .prompt().user(query)
                         .stream()

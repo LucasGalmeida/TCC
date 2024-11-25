@@ -1,7 +1,8 @@
-version: '3.8'
+version: '3.8' # Versão do Docker
 
 services:
 
+  # Container responsável por rodar o Ollama
   ollama-llm:
     image: ollama/ollama:latest
     volumes:
@@ -11,6 +12,7 @@ services:
     networks:
       - app-network
 
+  # Container responsável por baixar o modelo Llama 3.2
   prepare-models:
     image: ollama/ollama:latest
     depends_on:
@@ -31,6 +33,7 @@ services:
     networks:
       - app-network
 
+  # Container responsável por executar o banco de dados PostgresSQL juntamente com o PGVector
   db:
     image: pgvector/pgvector:pg16
     ports:
@@ -46,6 +49,7 @@ services:
     networks:
       - app-network
 
+  # Container responsável por executar o backend java da aplicação
   backend-spring-ai:
     build:
       context: ./backend
@@ -78,6 +82,7 @@ services:
     networks:
       - app-network
 
+  # Container responsável por executar o frontend da aplicação
   frontend:
     build:
       context: ./frontend
@@ -86,6 +91,7 @@ services:
     networks:
       - app-network
 
+  # Volumes da aplicação, armazenam a extensão PGVector, o Ollama, e o banco de dados
 volumes:
   pgvector_data:
   ollama_data:
