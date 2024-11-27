@@ -13,7 +13,9 @@ import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tomcat.util.http.fileupload.InvalidFileNameException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -52,26 +54,6 @@ public class DocumentServiceImpl implements DocumentService {
     private String maxDocumentSize;
     @Value("${spring.servlet.multipart.max-request-size}")
     private String maxRequestSize;
-
-    private String saveDocument(MultipartFile file, Integer userId, String dateUpload) throws IOException {
-        validateDocumentSize(file.getSize());
-        validateDocumentType(file.getContentType());
-
-        String newDocumentName = generateDocumentName(file.getOriginalFilename(), dateUpload);
-        Path directoryPath = Paths.get(path, userId.toString());
-
-        if (!Files.exists(directoryPath)) {
-            Files.createDirectories(directoryPath);
-        }
-
-        Path fullPath = directoryPath.resolve(newDocumentName);
-        try {
-            file.transferTo(fullPath.toFile());
-        } catch (IOException e) {
-            throw new DocumentStorageException("Falha ao armazenar documento: " + newDocumentName, e);
-        }
-        return newDocumentName;
-    }
 
     @Override
     public Resource getDocument(Path fullPath) throws IOException {
@@ -157,25 +139,6 @@ public class DocumentServiceImpl implements DocumentService {
         return false;
     }
 
-    private String generateDocumentName(String originalDocumentName, String dateUpload) {
-        String extension = getDocumentExtension(originalDocumentName);
-        String baseName = originalDocumentName.replace(extension, "");
-        return baseName + "_" + dateUpload + ".pdf";
-    }
-
-    @Override
-    public String getDocumentExtension(String fileName) {
-        if (fileName == null || fileName.isEmpty()) {
-            return "";
-        }
-
-        int lastDotIndex = fileName.lastIndexOf('.');
-        if (lastDotIndex != -1 && lastDotIndex < fileName.length() - 1) {
-            return fileName.substring(lastDotIndex).toLowerCase();
-        } else {
-            return "";
-        }
-    }
 
     @Override
     @Transactional
@@ -195,6 +158,39 @@ public class DocumentServiceImpl implements DocumentService {
             throw new DocumentStorageException("Falha ao armazenar o arquivo: " + file.getOriginalFilename(), e);
         }
         return repository.save(document);
+    }
+
+    private String saveDocument(MultipartFile file, Integer userId, String dateUpload) throws IOException {
+        validateDocumentSize(file.getSize());
+        validateDocumentType(file.getContentType());
+
+        if (ObjectUtils.isEmpty(file.getOriginalFilename())) {
+            throw new DocumentTypeException("Nome do documento inválido");
+        }
+
+        String extension;
+        int lastDotIndex = file.getOriginalFilename().lastIndexOf('.');
+        if (lastDotIndex != -1 && lastDotIndex < file.getOriginalFilename().length() - 1) {
+            extension = file.getOriginalFilename().substring(lastDotIndex).toLowerCase();
+        } else {
+            extension = "";
+        }
+
+        String baseName = file.getOriginalFilename().replace(extension, "");
+        String newDocumentName = baseName + "_" + dateUpload + ".pdf";
+        Path directoryPath = Paths.get(path, userId.toString());
+
+        if (!Files.exists(directoryPath)) {
+            Files.createDirectories(directoryPath);
+        }
+
+        Path fullPath = directoryPath.resolve(newDocumentName);
+        try {
+            file.transferTo(fullPath.toFile());
+        } catch (IOException e) {
+            throw new DocumentStorageException("Falha ao armazenar documento: " + newDocumentName, e);
+        }
+        return newDocumentName;
     }
 
     @Override

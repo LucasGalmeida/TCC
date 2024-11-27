@@ -13,8 +13,6 @@ public interface DocumentService {
 
     Resource getDocument(Path fullPath) throws IOException;
 
-    String getDocumentExtension(String fileName);
-
     Document saveDocumentByUser(MultipartFile file) throws FileAlreadyExistsException;
     List<Document> saveDocumentsByUser(MultipartFile[] files) throws FileAlreadyExistsException;
 

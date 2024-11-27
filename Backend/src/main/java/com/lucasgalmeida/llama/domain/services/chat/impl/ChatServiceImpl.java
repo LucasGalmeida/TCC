@@ -68,24 +68,35 @@ public class ChatServiceImpl implements ChatService {
         this.chatHistoryRepository = chatHistoryRepository;
     }
 
+    // Executado ao iniciar a aplicacao
     @EventListener(ApplicationReadyEvent.class)
     public void preencherChatHistory() {
+        // busca todos os chats
         List<Chat> chats = chatRepository.findAll();
+
+        // Variavel que armazena todas as mensagens (sera usada para gerar o advisor)
         Map<String, List<Message>> memoria = new HashMap<>();
+
+        // passa por cada chat
         chats.forEach(chat -> {
+            // busca as mensagens do chat
             List<Message> messageList = chatHistoryRepository.findByChat_IdOrderByDateAsc(chat.getId()).stream()
                     .map(mensagem -> {
                         ChatHistoryEnum messageType = mensagem.getType();
                         Message message =
+                                // verifica se a mensagem e do usuario ou do modelo
                                 messageType.equals(ChatHistoryEnum.USER_REQUEST) ?
                                         new UserMessage(mensagem.getMessage()) :
                                         new AssistantMessage(mensagem.getMessage());
                         return message;
                     }).toList();
+            // insere as mensagens na variavel do advisor
             memoria.put(chat.getId().toString(), messageList);
         });
+        // Cria o advisor e insere o historico de mensagens
         InMemoryChatMemory memoriaSalva = new InMemoryChatMemory();
         memoria.forEach(memoriaSalva::add);
+        // Registra o novo advisor
         chatClient = chatClient.mutate().defaultAdvisors(new MessageChatMemoryAdvisor(memoriaSalva)).build();
     }
 
@@ -256,7 +267,6 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public void deleteLastChatHistoryByChatId(Integer id) {
-
         chatHistoryRepository.deleteLastChatHistoryByChatId(id);
     }
 

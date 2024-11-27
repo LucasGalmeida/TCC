@@ -71,7 +71,7 @@ public class ChatController {
     }
 
     @GetMapping(value = "/meu-professor-responde", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> meuProfessorRespnde(@RequestParam String query, @RequestParam List<Integer> documentsIds) {
+    public Flux<String> meuProfessorResponde(@RequestParam String query, @RequestParam List<Integer> documentsIds) {
         return chatService.chatWithStream(query, documentsIds);
     }
 }
