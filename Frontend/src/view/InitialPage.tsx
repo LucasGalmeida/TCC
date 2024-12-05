@@ -1,6 +1,6 @@
 // src/components/InitialPage.js
 import { Button, Layout, Modal } from 'antd';
-import { Content, Header } from 'antd/es/layout/layout';
+import { Content, Footer, Header } from 'antd/es/layout/layout';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CourseCarousel from '../components/Carousel';
@@ -28,7 +28,6 @@ function InitialPage() {
 
   const handleSendMessage = () => {
     if (newMessage.trim() === '') return;
-    if (selectedCourse == null) return;
     setLoading(true);
     const newChat = {
       message: newMessage,
@@ -39,7 +38,7 @@ function InitialPage() {
     setNewMessage('');
 
     try {
-      const eventSource = ChatService.chamadaStream(newMessage, selectedCourse.id)
+      const eventSource = ChatService.chamadaStream(newMessage, selectedCourse ? selectedCourse.id : null)
   
       eventSource.onmessage = (event) => {
         setChatHistory((prevChatHistory: any) => {
@@ -93,8 +92,14 @@ function InitialPage() {
             <h2 style={{textAlign: 'center'}}>Selecione um curso</h2>
             <CourseCarousel onSelectCourse={handleSelectCourse} />
           </div>
-          <Modal
-          title={`Chat do Curso: ${selectedCourse?.name}`}
+        </Content>
+        <Footer style={{display: 'flex', justifyContent: 'end'}}>
+          <div>
+            <Button onClick={() => handleSelectCourse(null)}>Teste</Button>
+          </div>
+        </Footer>
+      <Modal
+          title={`Chat do Curso: ${selectedCourse?.name ?? 'DEBUG'}`}
           visible={isModalVisible}
           onCancel={handleModalClose}
           footer={null}
@@ -161,7 +166,6 @@ function InitialPage() {
             </div>
           </div>
         </Modal>
-      </Content>
     </Layout>
   );
 }

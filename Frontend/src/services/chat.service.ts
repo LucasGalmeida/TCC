@@ -83,9 +83,10 @@ class ChatService {
         }
     }
      
-    static chamadaStream(query:string, documentsIds: number){
+    static chamadaStream(query: string, documentsIds: number[] | null) {
         const baseURL = backend.defaults.baseURL;
-        const aux = `${baseURL}${route}/meu-professor-responde?query=${encodeURIComponent(query)}&documentsIds=${documentsIds}`;
+        const formattedDocs = documentsIds ? documentsIds.join(',') : '';
+        const aux = `${baseURL}${route}/meu-professor-responde?query=${encodeURIComponent(query)}&documentsIds=${encodeURIComponent(formattedDocs)}`;
         return new EventSource(aux);
     }
 
