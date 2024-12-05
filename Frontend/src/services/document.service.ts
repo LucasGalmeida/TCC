@@ -13,6 +13,16 @@ class DocumentService {
         }
     }
 
+    static async allDocuments() {
+        try {
+            const response = await backend.get(route);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
     static async getDocumentById(id:string) {
         try {
             const response = await backend.get(route + `/${id}`);

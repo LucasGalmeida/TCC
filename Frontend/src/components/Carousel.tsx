@@ -14,7 +14,7 @@ function CourseCarousel({ onSelectCourse }: any) {
   }, [])
 
   function buscarMeusDocumentos(){
-    DocumentService.myDocuments()
+    DocumentService.allDocuments()
     .then(response => {
       setDocuments(response.filter((document:any) => document.processed));
     })
