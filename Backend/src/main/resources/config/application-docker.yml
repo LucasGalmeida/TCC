@@ -1,7 +1,4 @@
 spring:
-  config:
-    activate:
-      on-profile: docker
   # url banco
   datasource:
     url: jdbc:postgresql://db:5433/postgres-docker

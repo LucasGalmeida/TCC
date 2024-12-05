@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 spring:
   profiles:
     # Define que o profile usado sera o Local

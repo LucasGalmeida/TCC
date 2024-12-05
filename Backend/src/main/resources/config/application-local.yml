@@ -1,7 +1,4 @@
 spring:
-  config:
-    activate:
-      on-profile: local
   # url banco de dados
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
