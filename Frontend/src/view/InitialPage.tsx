@@ -1,5 +1,5 @@
 // src/components/InitialPage.js
-import { Button, Layout, Modal, message } from 'antd';
+import { Button, Layout, Modal } from 'antd';
 import { Content, Header } from 'antd/es/layout/layout';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';

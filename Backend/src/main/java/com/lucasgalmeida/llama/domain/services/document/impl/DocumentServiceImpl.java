@@ -96,6 +96,11 @@ public class DocumentServiceImpl implements DocumentService {
         }
         return new ArrayList<>();
     }
+
+    @Override
+    public List<Document> getAllProcessedDocuments() {
+        return repository.findProcessedDocuments();
+    }
     @Override
     public List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds) {
         List<Document> myDocuments = repository.findAllById(documentsIds);
