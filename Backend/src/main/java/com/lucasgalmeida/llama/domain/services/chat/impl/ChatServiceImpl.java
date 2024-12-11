@@ -58,7 +58,7 @@ public class ChatServiceImpl implements ChatService {
 
     public ChatServiceImpl(ChatClient.Builder builder, DocumentService documentService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = builder
-                .defaultSystem("Você é uma IA séria que consegue interagir com o usuário de maneira clara e objetiva. Se solicitado, forneça exemplos. NÃO consulte os documentos disponibilizados por contra própria. Você deve consultar a documentação APENAS se solicitado.")
+                .defaultSystem("Você é uma IA séria que consegue interagir com o usuário de maneira clara e objetiva. Se solicitado, forneça exemplos.")
                 .build();
         this.documentService = documentService;
         this.authService = authService;
@@ -176,16 +176,17 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     @Override
     public void processDocumentById(Integer documentId) throws IOException {
+        // Busca documento no banco de dados
         com.lucasgalmeida.llama.domain.entities.Document document = documentService.getDocumentById(documentId);
         if (document.isProcessed()) throw new RuntimeException("Documento ja processado");
+        // Busca documento no sistema
         Path fullPath = documentService.getFullPath(document);
         Resource documentFile = documentService.getDocument(fullPath);
         if (!documentFile.exists()) throw new RuntimeException("Document nao encontrado");
 
+        // Inicia a leitura do pdf
         TikaDocumentReader tikaDocumentReader = new TikaDocumentReader(documentFile);
         TokenTextSplitter tokenTextSplitter = new TokenTextSplitter();
-
-
         List<Document> documents = null;
         try {
             documents = tikaDocumentReader.get(); // Le o pdf
@@ -197,10 +198,10 @@ public class ChatServiceImpl implements ChatService {
 
         if (CollectionUtils.isEmpty(documents)) throw new RuntimeException("Não foi possível ler o PDF");
 
+        // Após a leitura, divide o texto extraido do pdf em chunks
         List<Document> documentosProcessados = null;
-
         try {
-            documentosProcessados = tokenTextSplitter.apply(documents);  //Divide em chunks
+            documentosProcessados = tokenTextSplitter.apply(documents);
         } catch (Exception e) {
             e.printStackTrace();
             log.error("Ocorreu um erro ao converter o PDF em chunks");
@@ -210,8 +211,11 @@ public class ChatServiceImpl implements ChatService {
         if (CollectionUtils.isEmpty(documentosProcessados))
             throw new RuntimeException("Não foi possível processar o PDF");
 
+        // Insere os chunks no banco de dados vetorial
         vectorStore.accept(documentosProcessados);
+        // Marca o documento como processado para não ser necessário realizar essa operação novamente
         document.setProcessed(true);
+        // Vincula o documento com os vetores gerados a partir dele
         document.setVectorStores(findByFileName(document.getFileNameWithTimeStamp()));
         documentService.salvarDocumento(document);
     }

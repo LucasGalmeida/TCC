@@ -148,6 +148,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional
     public Document saveDocumentByUser(MultipartFile file) throws FileAlreadyExistsException {
+        // Cria um objeto do tipo documento
         Document document = new Document();
         if (repository.existsByName(file.getOriginalFilename())) {
             throw new FileAlreadyExistsException(file.getOriginalFilename());
@@ -156,8 +157,10 @@ public class DocumentServiceImpl implements DocumentService {
         document.setType(file.getContentType());
         LocalDateTime dateUpload = LocalDateTime.now();
         document.setDateUpload(dateUpload);
+        // busca usuario que realizou a operacao
         document.setUser(authService.findAuthenticatedUser());
         try {
+            // atualiza o nome do documento (concatena data de insercao para torna-lo unico)
             document.setOriginalFileName(saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER)));
         } catch (IOException e) {
             throw new DocumentStorageException("Falha ao armazenar o arquivo: " + file.getOriginalFilename(), e);
@@ -166,13 +169,16 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private String saveDocument(MultipartFile file, Integer userId, String dateUpload) throws IOException {
+        // verifica se o arquivo e muito grande
         validateDocumentSize(file.getSize());
+        // verifica se o arquivo e pdf
         validateDocumentType(file.getContentType());
 
         if (ObjectUtils.isEmpty(file.getOriginalFilename())) {
             throw new DocumentTypeException("Nome do documento inválido");
         }
 
+        // remove a extensao para pegar apenas o nome do arquivo
         String extension;
         int lastDotIndex = file.getOriginalFilename().lastIndexOf('.');
         if (lastDotIndex != -1 && lastDotIndex < file.getOriginalFilename().length() - 1) {
@@ -180,15 +186,18 @@ public class DocumentServiceImpl implements DocumentService {
         } else {
             extension = "";
         }
-
         String baseName = file.getOriginalFilename().replace(extension, "");
         String newDocumentName = baseName + "_" + dateUpload + ".pdf";
+
+        // busca a pasta especifica do usuario no sistema
         Path directoryPath = Paths.get(path, userId.toString());
 
+        // cria o arquivo na pasta definida pelo usuario
         if (!Files.exists(directoryPath)) {
             Files.createDirectories(directoryPath);
         }
 
+        // insere os dados do pdf no arquivo criado
         Path fullPath = directoryPath.resolve(newDocumentName);
         try {
             file.transferTo(fullPath.toFile());
