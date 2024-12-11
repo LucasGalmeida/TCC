@@ -23,6 +23,7 @@ public interface DocumentService {
 
     Path getFullPath(Document document);
     List<Document> getMyDocuments();
+    List<Document> getAllProcessedDocuments();
     List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds);
     void salvarDocumento(Document document);
     Document updateDocument(Document document);
