@@ -33,6 +33,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -58,9 +59,6 @@ public class ChatServiceImpl implements ChatService {
     public ChatServiceImpl(ChatClient.Builder builder, DocumentService documentService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = builder
                 .defaultSystem("Você é uma IA séria que consegue interagir com o usuário de maneira clara e objetiva. Se solicitado, forneça exemplos. NÃO consulte os documentos disponibilizados por contra própria. Você deve consultar a documentação APENAS se solicitado.")
-                .defaultAdvisors(
-                        new MessageChatMemoryAdvisor(new InMemoryChatMemory())
-                )
                 .build();
         this.documentService = documentService;
         this.authService = authService;
@@ -119,10 +117,43 @@ public class ChatServiceImpl implements ChatService {
                         .advisors(a -> a
                                 .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         )
-                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, op != null ? SearchRequest.defaults().withFilterExpression(op.build()) : SearchRequest.defaults()))
                         .call().content();
             }
             return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao se comunidar com a LLM");
+        }
+    }
+
+    @Override
+    public Flux<String> chatWithStream(String query, List<Integer> documentsIds) {
+        try {
+            List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
+
+            FilterExpressionBuilder b = new FilterExpressionBuilder();
+            FilterExpressionBuilder.Op op = null;
+            for (String fileName : fileNames) {
+                if (op == null) {
+                    op = b.or(b.eq("file_name", fileName), b.eq("source", fileName));
+                } else {
+                    op = b.or(op, b.or(b.eq("file_name", fileName), b.eq("source", fileName)));
+                }
+            }
+            if(op != null){
+                return chatClient
+                        .prompt().user(query)
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
+                        .stream()
+                        .content().map(content -> content.replace(" ", "\u00A0"));
+            } else {
+                return chatClient
+                        .prompt().user(query)
+                        .stream()
+                        .content().map(content -> content.replace(" ", "\u00A0"));
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Erro ao se comunidar com a LLM");
@@ -210,9 +241,7 @@ public class ChatServiceImpl implements ChatService {
         if (!user.getId().equals(chat.getUser().getId())) {
             throw new UnauthorizedException("Usuário não autorizado para ver esse chat");
         }
-        List<ChatHistory> messages = chatHistoryRepository.findByChat_IdOrderByDateAsc(id);
-
-        return messages;
+        return chatHistoryRepository.findByChat_IdOrderByDateAsc(id);
     }
 
     @Override

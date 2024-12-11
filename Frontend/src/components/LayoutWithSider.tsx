@@ -263,7 +263,7 @@ const handleEdit = () => {
           ),
           key: doc.id,
           style: {whiteSpace: 'normal', height: 'auto', border: `1px solid ${doc.processed ? 'green' : 'red'}`, paddingLeft: '0px', paddingRight: '0px', backgroundColor: '#e6f3ff'},
-          onClick: () => navigate(`/document/${doc.id}`)
+          onClick: () => navigate(`/document/${doc.id}`, { state: { document: doc } })
         })),
       ],
     },
@@ -356,7 +356,7 @@ const handleEdit = () => {
               style={{ fontSize: '16px', width: 64, height: 64, color: "white" }}
             />
             <Link to="/home" style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', marginLeft: '16px' }}>
-              Chat IA
+              Meu professor responde
             </Link>
           </div>
           <Popconfirm
@@ -386,7 +386,7 @@ const handleEdit = () => {
             React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<any>, { documents, showModal }) : child
           )}
         </Content>
-        <Footer style={{ textAlign: 'center' }}>ChatIA ©2024</Footer>
+        <Footer style={{ textAlign: 'center' }}>Meu professor responde ©2024</Footer>
       </Layout>
 
 

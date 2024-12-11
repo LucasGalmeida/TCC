@@ -13,6 +13,7 @@ import com.lucasgalmeida.llama.domain.services.document.DocumentService;
 import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -84,13 +85,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Path getFullPath(Document document) {
-        return Paths.get(path, document.getUser().getId().toString(), getFinalFileName(document));
-    }
-
-    public String getFinalFileName(Document document) {
-        String fileNameWithoutExtension = removeExtension(document.getName());
-        String extension = getExtension(document.getName());
-        return fileNameWithoutExtension + "_" + document.getDateUpload().format(DATE_TIME_FORMATTER) + "." + extension;
+        return Paths.get(path, document.getUser().getId().toString(), document.getOriginalFileName());
     }
 
     @Override
@@ -103,20 +98,28 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public List<String> getFileNamesFromAllDocuments() {
-        List<Document> myDocuments = getMyDocuments();
-        return myDocuments.stream().map(this::getFinalFileName).toList();
+    public List<Document> getAllProcessedDocuments() {
+        return repository.findProcessedDocuments();
     }
-
     @Override
     public List<String> getFileNamesFromDocumentsIds(List<Integer> documentsIds) {
         List<Document> myDocuments = repository.findAllById(documentsIds);
-        return myDocuments.stream().map(this::getFinalFileName).toList();
+        return myDocuments.stream().map(Document::getOriginalFileName).toList();
     }
 
     @Override
     public void salvarDocumento(Document document) {
         repository.save(document);
+    }
+
+    @Override
+    @Transactional
+    public Document updateDocument(Document document) {
+        Document salvar = getDocumentById(document.getId());
+        salvar.setName(document.getName());
+        salvar.setDescription(document.getDescription());
+        salvar = repository.save(salvar);
+        return salvar;
     }
 
     public void deleteDocument(Path fullPath) {
@@ -133,22 +136,6 @@ public class DocumentServiceImpl implements DocumentService {
         } catch (IOException e) {
             throw new DocumentStorageException("Falha ao deletar o documento", e);
         }
-    }
-
-    private String removeExtension(String filePath) {
-        int lastDotIndex = filePath.lastIndexOf('.');
-        if (lastDotIndex != -1 && lastDotIndex > filePath.lastIndexOf(File.separator)) {
-            return filePath.substring(0, lastDotIndex);
-        }
-        return filePath;
-    }
-
-    private String getExtension(String filePath) {
-        int lastDotIndex = filePath.lastIndexOf('.');
-        if (lastDotIndex != -1 && lastDotIndex > filePath.lastIndexOf(File.separator)) {
-            return filePath.substring(lastDotIndex + 1);
-        }
-        return "";
     }
 
     private void validateDocumentSize(long fileSize) {
@@ -178,7 +165,7 @@ public class DocumentServiceImpl implements DocumentService {
     private String generateDocumentName(String originalDocumentName, String dateUpload) {
         String extension = getDocumentExtension(originalDocumentName);
         String baseName = originalDocumentName.replace(extension, "");
-        return baseName + "_" + dateUpload + extension;
+        return baseName + "_" + dateUpload + ".pdf";
     }
 
     @Override
@@ -207,13 +194,12 @@ public class DocumentServiceImpl implements DocumentService {
         LocalDateTime dateUpload = LocalDateTime.now();
         document.setDateUpload(dateUpload);
         document.setUser(authService.findAuthenticatedUser());
-        document = repository.save(document);
         try {
-            saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER));
+            document.setOriginalFileName(saveDocument(file, document.getUser().getId(), dateUpload.format(DATE_TIME_FORMATTER)));
         } catch (IOException e) {
             throw new DocumentStorageException("Falha ao armazenar o arquivo: " + file.getOriginalFilename(), e);
         }
-        return document;
+        return repository.save(document);
     }
 
     @Override

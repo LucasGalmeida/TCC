@@ -45,7 +45,7 @@ public class DocumentController {
     }
 
     @GetMapping("/resource/{id}")
-    public ResponseEntity<Resource> getResourceById(@PathVariable Integer id) throws IOException {
+    public ResponseEntity<Resource> getResourceById(@PathVariable Integer id) {
         Resource resource = service.getResourceById(id);
         if (resource.exists()) {
             HttpHeaders headers = new HttpHeaders();
@@ -60,6 +60,16 @@ public class DocumentController {
     @GetMapping("/my-documents")
     public ResponseEntity<List<Document>> getMyDocuments() {
         return ResponseEntity.ok(service.getMyDocuments());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Document>> getAllProcessedDocuments() {
+        return ResponseEntity.ok(service.getAllProcessedDocuments());
+    }
+
+    @PutMapping
+    public ResponseEntity<Document> updateDocument(@RequestBody Document document) {
+        return ResponseEntity.ok(service.updateDocument(document));
     }
 }
 

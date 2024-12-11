@@ -8,6 +8,6 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface VectorStoreRepository extends JpaRepository<VectorStore, UUID> {
-    @Query(value = "SELECT * FROM vector_store WHERE metadata->>'file_name' = :fileName", nativeQuery = true)
+    @Query(value = "SELECT * FROM vector_store WHERE metadata->>'file_name' = :fileName or metadata->>'source' = :fileName", nativeQuery = true)
     Set<VectorStore> findByFileName(String fileName);
 }
