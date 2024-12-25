@@ -22,7 +22,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class VectorStore {
+public class VectorStoreEntity {
 
     @Id
     @GeneratedValue
@@ -35,6 +35,6 @@ public class VectorStore {
     @Column(name = "embedding", columnDefinition = "vector")
     private List<Double> embedding;
     @JsonBackReference("document-vector-store-document")
-    @ManyToMany(mappedBy = "vectorStores")
-    private Set<Document> documents;
+    @ManyToMany(mappedBy = "vetores")
+    private Set<Documentos> documentos;
 }
