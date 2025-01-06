@@ -13,6 +13,16 @@ class DocumentService {
         }
     }
 
+    static async allDocuments() {
+        try {
+            const response = await backend.get(route);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
     static async getDocumentById(id:string) {
         try {
             const response = await backend.get(route + `/${id}`);
@@ -50,6 +60,20 @@ class DocumentService {
     static async deleteDocumentById(id:number) {
         try {
             const response = await backend.delete(route + `/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+
+    static async updateDocumentById(id:number, name: string, description: string) {
+        try {
+            const response = await backend.put(route, {
+                id: id,
+                name: name,
+                description: description,
+            });
             return response.data;
         } catch (error) {
             console.error(error);

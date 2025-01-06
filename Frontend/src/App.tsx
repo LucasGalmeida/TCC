@@ -9,6 +9,7 @@ import RequireAuth from './components/RequireAuth';
 import DocumentView from './view/DocumentView';
 import HomeView from './view/HomeView';
 import ChatView from './view/ChatView';
+import InitialPage from './view/InitialPage';
 
 function App() {
 
@@ -16,7 +17,8 @@ function App() {
     <AuthContextProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<InitialPage />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/home" element={
             <RequireAuth>

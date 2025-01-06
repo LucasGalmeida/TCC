@@ -82,7 +82,14 @@ class ChatService {
           throw error;
         }
     }
-      
+
+    static chamadaStream(query: string, documentsId: number | null) {
+        const baseURL = backend.defaults.baseURL;
+        const formattedDocs = documentsId ? documentsId : '';
+        const aux = `${baseURL}${route}/meu-professor-responde?query=${encodeURIComponent(query)}&documentsIds=${encodeURIComponent(formattedDocs)}`;
+        return new EventSource(aux);
+    }
+
 }
 
 export default ChatService;

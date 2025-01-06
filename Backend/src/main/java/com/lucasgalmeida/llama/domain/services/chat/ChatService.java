@@ -2,7 +2,8 @@ package com.lucasgalmeida.llama.domain.services.chat;
 
 import com.lucasgalmeida.llama.domain.entities.Chat;
 import com.lucasgalmeida.llama.domain.entities.ChatHistory;
-import com.lucasgalmeida.llama.domain.entities.VectorStore;
+import com.lucasgalmeida.llama.domain.entities.VectorStoreEntity;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,8 +11,9 @@ import java.util.Set;
 
 public interface ChatService {
     ChatHistory chatIA(String query, Integer chatId, List<Integer> documentsIds);
+    Flux<String> chatWithStream(String query, List<Integer> documentsIds);
     void processDocumentById(Integer id) throws IOException;
-    Set<VectorStore> findByFileName(String fileName);
+    Set<VectorStoreEntity> findByFileName(String fileName);
     Chat createNewChat(String title);
     Chat changeTitle(Integer id, String title);
     List<Chat> findAllChatsByUser();

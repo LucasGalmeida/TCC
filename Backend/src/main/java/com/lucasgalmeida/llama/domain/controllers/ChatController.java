@@ -6,8 +6,10 @@ import com.lucasgalmeida.llama.domain.entities.Chat;
 import com.lucasgalmeida.llama.domain.entities.ChatHistory;
 import com.lucasgalmeida.llama.domain.services.chat.ChatService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -66,5 +68,10 @@ public class ChatController {
     public ResponseEntity<?> deleteLastChatHistoryByChatId(@PathVariable Integer id) {
         chatService.deleteLastChatHistoryByChatId(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/meu-professor-responde", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> meuProfessorResponde(@RequestParam String query, @RequestParam List<Integer> documentsIds) {
+        return chatService.chatWithStream(query, documentsIds);
     }
 }
