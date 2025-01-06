@@ -1,0 +1,14 @@
+spring:
+  # url banco
+  datasource:
+    url: jdbc:postgresql://db:5433/postgres-docker
+  # url ollama
+  ai:
+    ollama:
+      base-url: http://ollama-llm:11434
+  # ativa o dokcer
+  docker:
+    compose:
+      lifecycle-management: START_AND_STOP
+# pasta onde os arquivos sao armazenados
+filePath: /app/data

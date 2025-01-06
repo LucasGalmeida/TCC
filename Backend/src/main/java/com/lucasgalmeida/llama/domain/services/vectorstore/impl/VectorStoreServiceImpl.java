@@ -1,6 +1,6 @@
 package com.lucasgalmeida.llama.domain.services.vectorstore.impl;
 
-import com.lucasgalmeida.llama.domain.entities.VectorStore;
+import com.lucasgalmeida.llama.domain.entities.VectorStoreEntity;
 import com.lucasgalmeida.llama.domain.repositories.VectorStoreRepository;
 import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class VectorStoreServiceImpl implements VectorStoreService {
     }
 
     @Override
-    public Set<VectorStore> findByFileName(String fileName) {
+    public Set<VectorStoreEntity> findByFileName(String fileName) {
         return repository.findByFileName(fileName);
     }
 }
