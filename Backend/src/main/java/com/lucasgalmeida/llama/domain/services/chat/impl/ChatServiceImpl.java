@@ -1,9 +1,7 @@
 package com.lucasgalmeida.llama.domain.services.chat.impl;
 
 import com.lucasgalmeida.llama.application.constants.ChatHistoryEnum;
-import com.lucasgalmeida.llama.domain.entities.Chat;
-import com.lucasgalmeida.llama.domain.entities.ChatHistory;
-import com.lucasgalmeida.llama.domain.entities.User;
+import com.lucasgalmeida.llama.domain.entities.*;
 import com.lucasgalmeida.llama.domain.exceptions.auth.UnauthorizedException;
 import com.lucasgalmeida.llama.domain.exceptions.chat.ChatAlreadyExistsException;
 import com.lucasgalmeida.llama.domain.exceptions.chat.ChatNotFoundException;
@@ -11,7 +9,7 @@ import com.lucasgalmeida.llama.domain.repositories.ChatHistoryRepository;
 import com.lucasgalmeida.llama.domain.repositories.ChatRepository;
 import com.lucasgalmeida.llama.domain.services.auth.AuthService;
 import com.lucasgalmeida.llama.domain.services.chat.ChatService;
-import com.lucasgalmeida.llama.domain.services.document.DocumentService;
+import com.lucasgalmeida.llama.domain.services.documentos.DocumentosService;
 import com.lucasgalmeida.llama.domain.services.vectorstore.VectorStoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -48,7 +46,7 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 @Service
 public class ChatServiceImpl implements ChatService {
 
-    private final DocumentService documentService;
+    private final DocumentosService documentosService;
     private final AuthService authService;
     private final VectorStore vectorStore;
     private final VectorStoreService vectorStoreService;
@@ -56,11 +54,11 @@ public class ChatServiceImpl implements ChatService {
     private final ChatHistoryRepository chatHistoryRepository;
     private ChatClient chatClient;
 
-    public ChatServiceImpl(ChatClient.Builder builder, DocumentService documentService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
+    public ChatServiceImpl(ChatClient.Builder builder, DocumentosService documentosService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = builder
                 .defaultSystem("Responda sempre da maneira mais sucinta possível. Se não souber a resposta, apenas diga que não sabe responser.")
                 .build();
-        this.documentService = documentService;
+        this.documentosService = documentosService;
         this.authService = authService;
         this.vectorStore = vectorStore;
         this.vectorStoreService = vectorStoreService;
@@ -106,7 +104,7 @@ public class ChatServiceImpl implements ChatService {
             Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new ChatNotFoundException("Chat não encontrado com o id " + chatId));
             chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.USER_REQUEST, query, chat));
 
-            List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
+            List<String> fileNames = documentosService.getFileNamesFromDocumentsIds(documentsIds);
             String response = "";
             if (CollectionUtils.isEmpty(fileNames)) {
                 response = chatClient
@@ -128,7 +126,7 @@ public class ChatServiceImpl implements ChatService {
                         .advisors(a -> a
                                 .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         )
-                        .advisors(new QuestionAnswerAdvisor(vectorStore, op != null ? SearchRequest.defaults().withFilterExpression(op.build()) : SearchRequest.defaults()))
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, op != null ? SearchRequest.builder().filterExpression(op.build()).build() : SearchRequest.builder().build()))
                         .call().content();
             }
             return chatHistoryRepository.save(new ChatHistory(ChatHistoryEnum.IA_RESPONSE, response, chat));
@@ -141,7 +139,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public Flux<String> chatWithStream(String query, List<Integer> documentsIds) {
         try {
-            List<String> fileNames = documentService.getFileNamesFromDocumentsIds(documentsIds);
+            List<String> fileNames = documentosService.getFileNamesFromDocumentsIds(documentsIds);
 
             FilterExpressionBuilder b = new FilterExpressionBuilder();
             FilterExpressionBuilder.Op op = null;
@@ -156,7 +154,7 @@ public class ChatServiceImpl implements ChatService {
                 // Fluxo com RAG
                 return chatClient
                         .prompt().user(query)
-                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.defaults().withFilterExpression(op.build())))
+                        .advisors(new QuestionAnswerAdvisor(vectorStore, SearchRequest.builder().filterExpression(op.build()).build()))
                         .stream()
                         .content().map(content -> content.replace(" ", "\u00A0"));
             } else {
@@ -177,12 +175,12 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void processDocumentById(Integer documentId) throws IOException {
         // Busca documento no banco de dados
-        com.lucasgalmeida.llama.domain.entities.Document document = documentService.getDocumentById(documentId);
-        if (document.isProcessed()) throw new RuntimeException("Documento ja processado");
+        Documentos documentos = documentosService.getDocumentById(documentId);
+        if (documentos.isProcessed()) throw new RuntimeException("Documento ja processado");
         // Busca documento no sistema
-        Path fullPath = documentService.getFullPath(document);
-        Resource documentFile = documentService.getDocument(fullPath);
-        if (!documentFile.exists()) throw new RuntimeException("Document nao encontrado");
+        Path fullPath = documentosService.getFullPath(documentos);
+        Resource documentFile = documentosService.getDocument(fullPath);
+        if (!documentFile.exists()) throw new RuntimeException("Documento nao encontrado");
 
         // Inicia a leitura do pdf
         TikaDocumentReader tikaDocumentReader = new TikaDocumentReader(documentFile);
@@ -214,14 +212,14 @@ public class ChatServiceImpl implements ChatService {
         // Insere os chunks no banco de dados vetorial
         vectorStore.accept(documentosProcessados);
         // Marca o documento como processado para não ser necessário realizar essa operação novamente
-        document.setProcessed(true);
+        documentos.setProcessed(true);
         // Vincula o documento com os vetores gerados a partir dele
-        document.setVectorStores(findByFileName(document.getFileNameWithTimeStamp()));
-        documentService.salvarDocumento(document);
+        documentos.setVetores(findByFileName(documentos.getFileNameWithTimeStamp()));
+        documentosService.salvarDocumento(documentos);
     }
 
     @Override
-    public Set<com.lucasgalmeida.llama.domain.entities.VectorStore> findByFileName(String fileName) {
+    public Set<VectorStoreEntity> findByFileName(String fileName) {
         return vectorStoreService.findByFileName(fileName);
     }
 

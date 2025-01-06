@@ -19,7 +19,7 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Document {
+public class Documentos {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -53,7 +53,7 @@ public class Document {
             joinColumns = @JoinColumn(name = "document_id"),
             inverseJoinColumns = @JoinColumn(name = "vector_store_id")
     )
-    private Set<VectorStore> vectorStores;
+    private Set<VectorStoreEntity> vetores;
 
     @JsonIgnore
     public String getFileNameWithTimeStamp(){
