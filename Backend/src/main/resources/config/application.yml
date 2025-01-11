@@ -44,21 +44,16 @@ spring:
 
   # Configuracao do Spring AI
   ai:
-    ollama:
-      embedding:
-        options:
-          # Modelo de conversao de texto para Vetores Embeddings
-          model: nomic-embed-text
+    openai:
+      api-key: ${OPENAI_API_KEY}
       chat:
         options:
           # Modelo de LLM
-          model: llama3.2
+          model: gpt-4o
     vectorstore:
       # Configuracao da tabela que armazena os Embeddings
       pgvector:
-        index-type: HNSW
-        distance-type: COSINE_DISTANCE
-        dimension: 768
+        initialize-schema: true
 
 # Configuracao do token do spring security
 api:
