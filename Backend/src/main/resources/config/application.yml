@@ -53,12 +53,6 @@ spring:
         options:
           # Modelo de LLM
           model: llama3.2
-    vectorstore:
-      # Configuracao da tabela que armazena os Embeddings
-      pgvector:
-        index-type: HNSW
-        distance-type: COSINE_DISTANCE
-        dimension: 768
 
 # Configuracao do token do spring security
 api:
