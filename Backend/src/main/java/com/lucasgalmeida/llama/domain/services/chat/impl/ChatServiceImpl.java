@@ -20,6 +20,8 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
+import org.springframework.ai.reader.pdf.ParagraphPdfDocumentReader;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -57,6 +59,7 @@ public class ChatServiceImpl implements ChatService {
     public ChatServiceImpl(ChatClient.Builder builder, DocumentosService documentosService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = builder
                 .defaultSystem("Responda sempre da maneira mais sucinta possível. Se não souber a resposta, apenas diga que não sabe responser.")
+                .defaultAdvisors(new QuestionAnswerAdvisor(vectorStore))
                 .build();
         this.documentosService = documentosService;
         this.authService = authService;
@@ -218,6 +221,28 @@ public class ChatServiceImpl implements ChatService {
         documentosService.salvarDocumento(documentos);
     }
 
+    private List<Document> processarPDF(Resource documentFile){
+        List<Document> documents;
+        try {
+            ParagraphPdfDocumentReader pdfReader = new ParagraphPdfDocumentReader(documentFile);
+            documents = pdfReader.get(); // Le o pdf
+        } catch (Exception ignored) {
+            try {
+                PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(documentFile);
+                documents = pdfReader.get(); // Le o pdf
+            } catch (Exception ignored2) {
+                try {
+                    TikaDocumentReader tikaDocumentReader = new TikaDocumentReader(documentFile);
+                    documents = tikaDocumentReader.get(); // Le o pdf
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("Ocorreu um erro ao ler o PDF");
+                    throw e;
+                }
+            }
+        }
+        return documents;
+    }
     @Override
     public Set<VectorStoreEntity> findByFileName(String fileName) {
         return vectorStoreService.findByFileName(fileName);
