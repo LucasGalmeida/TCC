@@ -59,7 +59,6 @@ function InitialPage() {
       eventSource.onerror = (error) => {
         console.error('Erro na conexão SSE:', error);
         eventSource.close();
-        // message.error('Erro ao processar o stream de SSE');
         setLoading(false);
       };
   
