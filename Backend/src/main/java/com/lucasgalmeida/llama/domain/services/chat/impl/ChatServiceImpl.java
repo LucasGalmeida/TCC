@@ -59,7 +59,6 @@ public class ChatServiceImpl implements ChatService {
     public ChatServiceImpl(ChatClient.Builder builder, DocumentosService documentosService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = builder
                 .defaultSystem("Responda sempre da maneira mais sucinta possível. Se não souber a resposta, apenas diga que não sabe responser.")
-                .defaultAdvisors(new QuestionAnswerAdvisor(vectorStore))
                 .build();
         this.documentosService = documentosService;
         this.authService = authService;
