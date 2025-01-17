@@ -104,7 +104,7 @@ function InitialPage() {
           footer={null}
           width="80%"
         >
-          <div style={{ display: 'flex', flexDirection: 'column', height: '500px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '75vh' }}>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }} ref={chatContainerRef}>
               {chatHistory.map((chat:any, index:any) => (
                 <div

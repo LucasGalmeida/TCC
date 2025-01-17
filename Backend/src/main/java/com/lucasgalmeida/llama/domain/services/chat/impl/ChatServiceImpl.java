@@ -59,7 +59,6 @@ public class ChatServiceImpl implements ChatService {
     public ChatServiceImpl(ChatClient.Builder builder, DocumentosService documentosService, AuthService authService, VectorStore vectorStore, VectorStoreService vectorStoreService, ChatRepository chatRepository, ChatHistoryRepository chatHistoryRepository) {
         this.chatClient = builder
                 .defaultSystem("Responda sempre da maneira mais sucinta possível. Se não souber a resposta, apenas diga que não sabe responser.")
-                .defaultAdvisors(new QuestionAnswerAdvisor(vectorStore))
                 .build();
         this.documentosService = documentosService;
         this.authService = authService;
@@ -186,20 +185,10 @@ public class ChatServiceImpl implements ChatService {
         if (!documentFile.exists()) throw new RuntimeException("Documento nao encontrado");
 
         // Inicia a leitura do pdf
-        TikaDocumentReader tikaDocumentReader = new TikaDocumentReader(documentFile);
-        TokenTextSplitter tokenTextSplitter = new TokenTextSplitter();
-        List<Document> documents = null;
-        try {
-            documents = tikaDocumentReader.get(); // Le o pdf
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Ocorreu um erro ao ler o PDF");
-            throw e;
-        }
-
+        List<Document> documents = processarPDF(documentFile);
         if (CollectionUtils.isEmpty(documents)) throw new RuntimeException("Não foi possível ler o PDF");
-
         // Após a leitura, divide o texto extraido do pdf em chunks
+        TokenTextSplitter tokenTextSplitter = new TokenTextSplitter();
         List<Document> documentosProcessados = null;
         try {
             documentosProcessados = tokenTextSplitter.apply(documents);
