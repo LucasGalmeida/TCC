@@ -150,7 +150,7 @@ const RegistrationForm: React.FC = () => {
             </Button>
             <Button
               type="default"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/login')}
               style={{ marginTop: '10px', width: '100%' }}
             >
               Voltar para a tela de login
