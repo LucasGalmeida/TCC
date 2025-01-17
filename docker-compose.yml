@@ -1,45 +1,14 @@
 version: '3.8' # Versão do Docker
-
+name: 'tcc-chat-gpt'
 services:
-
-  # Container responsável por rodar o Ollama
-  ollama-llm:
-    image: ollama/ollama:latest
-    volumes:
-      - ollama_data:/root/.ollama
-    ports:
-      - "11434:11434"
-    networks:
-      - app-network
-
-  # Container responsável por baixar o modelo Llama 3.2
-  prepare-models:
-    image: ollama/ollama:latest
-    depends_on:
-      - ollama-llm
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=http://ollama-llm:11434
-    entrypoint: >
-      sh -c "
-      echo 'Waiting for Ollama server to start...' &&
-      sleep 10 &&
-      echo 'Pulling llama3.2...' &&
-      ollama pull llama3.2 &&
-      echo 'Pulling embedding model...' &&
-      ollama pull nomic-embed-text &&
-      echo 'Model preparation complete.'"
-    networks:
-      - app-network
 
   # Container responsável por executar o banco de dados PostgresSQL juntamente com o PGVector
   db:
     image: pgvector/pgvector:pg16
     ports:
-      - '5433:5432'
+      - '5434:5432'
     environment:
-      - POSTGRES_DB=postgres-docker
+      - POSTGRES_DB=postgres-docker-gpt
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     labels:
@@ -58,15 +27,10 @@ services:
       - "8080:8080"
       - "5005:5005"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres-docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres-docker-gpt
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_AI_OLLAMA_BASE_URL=http://ollama-llm:11434/
-      - SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL=llama3.2
-      - SPRING_AI_OLLAMA_EMBEDDING_OPTIONS_MODEL=nomic-embed-text
-      - SPRING_AI_VECTORSTORE_PGVECTOR_INDEX_TYPE=HNSW
-      - SPRING_AI_VECTORSTORE_PGVECTOR_DISTANCE_TYPE=COSINE_DISTANCE
-      - SPRING_AI_VECTORSTORE_PGVECTOR_DIMENSIONS=768
       - SPRING_PROFILES_ACTIVE=docker
       - API_SECURITY_TOKEN_SECRET=my-secret-key
       - API_SECURITY_TOKEN_EXPIRATION_HOURS=2
@@ -76,9 +40,7 @@ services:
       - ollama_data:/root/.ollama
       - data:/app/data
     depends_on:
-      - prepare-models
       - db
-      - ollama-llm
     networks:
       - app-network
 
