@@ -38,3 +38,4 @@ build/
 /frontend/package-lock.json
 /frontend/.env
 /frontend/dist
+.env

@@ -6,6 +6,7 @@ Requisitos:
 
 Para rodar a aplicação, execute:
 docker-compose up --build
+Se for rodar a versão com chatGPT, é necessário inserir um arquivo .env na raiz do projeto. No arquivo inserir a chave de API Ex: OPENAI_API_KEY=chaveAqui
 
 ---------------------------------------------------------------------------------------------------
 Caso você queira rodar localmente (sem docker), você vai precisar:
