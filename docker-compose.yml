@@ -30,14 +30,13 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres-docker-gpt
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - SPRING_AI_OLLAMA_BASE_URL=http://ollama-llm:11434/
       - SPRING_PROFILES_ACTIVE=docker
       - API_SECURITY_TOKEN_SECRET=my-secret-key
       - API_SECURITY_TOKEN_EXPIRATION_HOURS=2
+      - OPENAI_API_KEY
       - FILE_PATH=/app/data
     command: ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-jar", "spring-ai-llama.jar"]
     volumes:
-      - ollama_data:/root/.ollama
       - data:/app/data
     depends_on:
       - db
@@ -56,7 +55,6 @@ services:
   # Volumes da aplicação, armazenam a extensão PGVector, o Ollama, e o banco de dados
 volumes:
   pgvector_data:
-  ollama_data:
   data:
 
 networks:
